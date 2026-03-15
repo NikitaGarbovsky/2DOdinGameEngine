@@ -1,0 +1,89 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "(Debug) Build project",
+      "type": "shell",
+      "command": "odin",
+      "args": [
+        "build",
+        "./src",
+        "-collection:app=./src",
+        "-collection:libs=./libs",
+        "-collection:Dependencies=./Dependencies",
+        "-out:./Build/Debug/2DOdinGameEngine.exe",
+        "-debug",
+        "-o:none"
+      ],
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "(Debug) Build project and run",
+      "type": "shell",
+      "command": "odin",
+      "args": [
+        "run",
+        "./src",
+        "-collection:app=./src",
+        "-collection:libs=./libs",
+        "-collection:Dependencies=./Dependencies",
+        "-out:./Build/Debug/2DOdinGameEngine.exe",
+        "-debug",
+        "-o:none",
+        "--"
+      ],
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "(Release) Build project",
+      "type": "shell",
+      "command": "odin",
+      "args": [
+        "build",
+        "./src",
+        "-collection:app=./src",
+        "-collection:libs=./libs",
+        "-collection:Dependencies=./Dependencies",
+        "-out:./Build/Release/2DOdinGameEngine.exe",
+        "-o:speed"
+      ],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "(Release) Build project and run",
+      "type": "shell",
+      "command": "odin",
+      "args": [
+        "run",
+        "./src",
+        "-collection:app=./src",
+        "-collection:libs=./libs",
+        "-collection:Dependencies=./Dependencies",
+        "-out:./Build/Release/2DOdinGameEngine.exe",
+        "-o:speed",
+        "--"
+      ],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+    "label": "(Dev) Run (super fast)",
+    "type": "process",
+    "command": "odin",
+    "args": [
+        "run", "./src",
+        "-collection:libs=./libs",
+        "-collection:Dependencies=Dependencies",
+        "-out:./Build/Debug/2DOdinGameEngine.exe",
+        "-extra-linker-flags:/LIBPATH:libs imgui_windows_x64.lib user32.lib gdi32.lib shell32.lib kernel32.lib"
+    ],
+    "options": { "cwd": "${workspaceFolder}" },
+    "problemMatcher": []
+    }
+  ]
+}
