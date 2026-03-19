@@ -1,19 +1,33 @@
 package mainapp
 
+import "base:runtime"
+import "core:log"
 import sdl "vendor:sdl3"
 
+default_context : runtime.Context
+
 StartProgram :: proc() {
+	context.logger = log.create_console_logger()
+	default_context = context
+
+	sdl.SetLogPriorities(.VERBOSE)
+	sdl.SetLogOutputFunction(proc "c" (userdata : rawptr, category : sdl.LogCategory, priority: sdl.LogPriority, message: cstring){
+		context = default_context
+		log.debugf("SDL {} [{}]: {}", category, priority, message)
+	}, nil)
 
 	ok := sdl.Init({.VIDEO, .EVENTS}); assert(ok)
 
 	MainWindow = sdl.CreateWindow(
 		"2DOdinGameEngine",
-		1280, 
-		780, 
+		1920, 
+		1080, 
 		sdl.WINDOW_RESIZABLE); 
 	assert(MainWindow != nil)
 
-	sdlRenderer = sdl.CreateRenderer(MainWindow, nil); assert(sdlRenderer != nil)
+	sdlGpu = sdl.CreateGPUDevice({.SPIRV}, true, nil); assert(sdlGpu != nil)
+	
+	ok = sdl.ClaimWindowForGPUDevice(sdlGpu, MainWindow); assert(ok)
 
 	// =========== Program initialized, run main loop ===========
 	MainLoop()
@@ -32,16 +46,25 @@ MainLoop :: proc() {
 			}
 		}
 		// ======================== Render Loop ========================
-	
-
-		sdl.SetRenderDrawColor(sdlRenderer, 20, 20, 20, 255)
-		sdl.RenderClear(sdlRenderer)
-
-		sdl.RenderPresent(sdlRenderer)
-
+		cmd_buf := sdl.AcquireGPUCommandBuffer(sdlGpu)
+		swapchain_tex : ^sdl.GPUTexture
+		ok := sdl.WaitAndAcquireGPUSwapchainTexture(cmd_buf, MainWindow, &swapchain_tex, nil, nil); assert(ok)
+		
+		color_target := sdl.GPUColorTargetInfo{
+			texture = swapchain_tex,
+			load_op = .CLEAR,
+			clear_color = {0,0.2, 0.4,1},
+			store_op = .STORE
+		}
+		render_pass := sdl.BeginGPURenderPass(cmd_buf, &color_target, 1, nil)
+		
+		
+		sdl.EndGPURenderPass(render_pass)
+		ok = sdl.SubmitGPUCommandBuffer(cmd_buf); assert(ok)
 		// ======================== Render Loop ========================
 	}	
 
+	
 	
 	CleanUpProgram()
 }
