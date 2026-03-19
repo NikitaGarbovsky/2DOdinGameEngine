@@ -2,6 +2,25 @@ package components
 
 import math "core:math/linalg"
 
+Component_Flag :: enum u16 {
+    Name,
+    Transform,
+    Sprite,
+    Collider,
+    Rigid_Body,
+    Interactable,
+    Trigger,
+    Script,
+}
+
+ComponentMask :: proc(_flag : Component_Flag) -> u16 {
+    return u16(1) << u16(_flag)
+}
+
+Name :: struct {
+
+}
+
 Transform :: struct {
     pos : math.Vector2f32,
     rot : f32,
@@ -29,9 +48,5 @@ Trigger :: struct {
 }
 
 Script :: struct {
-
-}
-
-Name :: struct {
 
 }
