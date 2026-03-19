@@ -3,6 +3,8 @@ package mainapp
 import "base:runtime"
 import "core:log"
 import sdl "vendor:sdl3"
+import ecs "../engine/ecs"
+import component "../engine/components"
 
 default_context : runtime.Context
 
@@ -35,6 +37,21 @@ StartProgram :: proc() {
 
 @private
 MainLoop :: proc() {
+	entityWorld : ecs.EntityWorld
+	entitys : [dynamic]ecs.Entity
+	// Dumby code for testing ecs implementation
+	for i : f32 = 0; i < 10; i += 1 {
+		e := ecs.CreateEntity(&entityWorld)
+		ecs.AddComponentToEntityWorld(&entityWorld, &entityWorld.transforms, e, component.Transform{100 + i, 200 + i}, .Transform)
+		append(&entitys, e)
+	}
+	
+	for i := 0; i < len(entityWorld.alive); i += 1{
+		hasTransformComponent := ecs.HasComponent(&entityWorld.transforms, entitys[i])
+		log.debugf("Entity number: {}, Has transform? {} , and their transform data: {}", i, hasTransformComponent, entityWorld.transforms.data[i])
+		
+	}
+
 	main_loop: for {
 		// process events
 		ev: sdl.Event

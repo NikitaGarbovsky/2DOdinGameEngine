@@ -46,18 +46,25 @@ DeleteEntity :: proc(_world : ^EntityWorld, _entityToDelete : Entity) {
     delete_key(&_world.componentSignatures, _entityToDelete)
 }
 
-AddComponent :: proc(_compStore : ^Component_Store, _entity : Entity) {
-    if idx, exists := _compStore.index_ofp[_entity]; exists {
-        _compStore.data[idx] = value
+@private 
+AddComponent :: proc(_compStore : ^Component_Store($T), _entity : Entity, _value: T) {
+    if idx, exists := _compStore.index_of[_entity]; exists {
+        _compStore.data[idx] = _value
         return
     }
 
     idx := len(_compStore.data)
-    append($_compStore.data, value)
-    append($_compStore.entities, _entity)
+    append(&_compStore.data, _value)
+    append(&_compStore.entities, _entity)
     _compStore.index_of[_entity] = idx
 }
 
+AddComponentToEntityWorld :: proc(_world : ^EntityWorld, _compStore : ^Component_Store($T), _entity : Entity, _value : T, _flag : components.Component_Flag) {
+    AddComponent(_compStore, _entity, _value)
+    _world.componentSignatures[_entity] |= components.ComponentMask(_flag)
+}
+
+@private
 RemoveComponent :: proc(_compStore : ^Component_Store($T), _entity : Entity) {
     idx, exists := _compStore.index_of[_entity]
 
@@ -77,7 +84,12 @@ RemoveComponent :: proc(_compStore : ^Component_Store($T), _entity : Entity) {
     delete_key(&_compStore.index_of, _entity)
 }
 
-HasComponent :: proc(_compStore : ^Component_Store($T), _entity : Entity) {
+RemoveComponentFromEntityWorld :: proc(_world : ^EntityWorld, _compStore : ^Component_Store($T), _entity : Entity, _flag : components.Component_Flag) {
+    RemoveComponent(_compStore, _entity)
+    _world.componentSignatures[e] &= ~components.ComponentMask(_flag)
+}
+
+HasComponent :: proc(_compStore : ^Component_Store($T), _entity : Entity)  -> bool {
     _, exists := _compStore.index_of[_entity]
     return exists
 }
