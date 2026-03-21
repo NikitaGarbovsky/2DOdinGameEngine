@@ -29,7 +29,8 @@ Transform :: struct {
 
 Sprite :: struct {
     // texture 
-    
+    size : math.Vector2f32, // Testing
+    color : [4]f32, // Testing
 }
 
 Collider :: struct {

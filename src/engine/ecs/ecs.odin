@@ -2,26 +2,13 @@ package ecs
 
 import components "../components"
 
-Entity :: struct {
-    id : u32
-    // #TODO: might want to add other information about entities when they're created, generation, reason for creation etc.
-}
+Init :: proc(_world : ^EntityWorld) {
+    _world.next_entity = 0
+    _world.alive = make(map[Entity]bool)
+    _world.componentSignatures = make(map[Entity]u16)
 
- // Manages all the entities and their associated components for the ECS system.
-EntityWorld :: struct {
-    next_entity: u32, // Increments when creating new entities
-    alive: map[Entity]bool, // Is this Entity alive in world
-    componentSignatures : map[Entity]u16, // Bitset mapped to each entitys components 
-
-    // ========= Component stores =========
-    transforms : Component_Store(components.Transform),
-}
-
-// Holds references to the components and their associated entities for the ECS system.
-Component_Store :: struct($T : typeid) {
-    data : [dynamic]T, // dense array of component data
-    entities : [dynamic]Entity, // paralell array of owning entities 
-    index_of : map[Entity]int // Lookup from entity to index
+    _world.transforms.index_of = make(map[Entity]int)
+    //_world.sprites.index_of = make(map[Entity]int) #TODO: add when adding sprites
 }
 
 CreateEntity :: proc (_world : ^EntityWorld) -> Entity {
@@ -86,7 +73,7 @@ RemoveComponent :: proc(_compStore : ^Component_Store($T), _entity : Entity) {
 
 RemoveComponentFromEntityWorld :: proc(_world : ^EntityWorld, _compStore : ^Component_Store($T), _entity : Entity, _flag : components.Component_Flag) {
     RemoveComponent(_compStore, _entity)
-    _world.componentSignatures[e] &= ~components.ComponentMask(_flag)
+    _world.componentSignatures[_entity] &= ~components.ComponentMask(_flag)
 }
 
 HasComponent :: proc(_compStore : ^Component_Store($T), _entity : Entity)  -> bool {
@@ -94,9 +81,9 @@ HasComponent :: proc(_compStore : ^Component_Store($T), _entity : Entity)  -> bo
     return exists
 }
 
-GetComponent :: proc(_compStore : ^Component_Store($T), _entity : Entity)  -> (^T, bool) {
-    idx, exists := _compStore.index_of[Entity]
+GetComponent :: proc(_compStore : ^Component_Store($T), _entity : Entity) -> (^T, bool) {
+    idx, exists := _compStore.index_of[_entity]
     if !exists do return nil, false
 
-    return &store.data[idx], true
+    return &_compStore.data[idx], true
 }
