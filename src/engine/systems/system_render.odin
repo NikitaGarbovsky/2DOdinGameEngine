@@ -4,6 +4,8 @@ import "../ecs"
 import "../renderer"
 
 RenderWorld :: proc(_world : ^ecs.EntityWorld, _renderer : ^renderer.Renderer) {
+    renderer.BindTestingPipeline(_renderer)
+
     for i := 0; i < len(_world.sprites.entities); i += 1 {
         e := _world.sprites.entities[i]
         sprite := _world.sprites.data[i]
@@ -11,6 +13,6 @@ RenderWorld :: proc(_world : ^ecs.EntityWorld, _renderer : ^renderer.Renderer) {
         transform, ok := ecs.GetComponent(&_world.transforms, e)
         if !ok do continue
 
-        // #TODO: Render entities within the world here
+        renderer.DrawQuad(_renderer, transform.pos, sprite.size, transform.rot, sprite.color)
     }
 }

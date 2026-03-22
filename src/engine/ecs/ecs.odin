@@ -8,7 +8,7 @@ Init :: proc(_world : ^EntityWorld) {
     _world.componentSignatures = make(map[Entity]u16)
 
     _world.transforms.index_of = make(map[Entity]int)
-    //_world.sprites.index_of = make(map[Entity]int) #TODO: add when adding sprites
+    _world.sprites.index_of = make(map[Entity]int) 
 }
 
 CreateEntity :: proc (_world : ^EntityWorld) -> Entity {
@@ -27,7 +27,8 @@ DeleteEntity :: proc(_world : ^EntityWorld, _entityToDelete : Entity) {
 
     // Remove from every component store in the world
     RemoveComponent(&_world.transforms, _entityToDelete)
-    // #TODO: Add other component stores when implemented.(sprite, colliders etc)
+    RemoveComponent(&_world.sprites, _entityToDelete)
+    // #TODO: Add other component stores when implemented.(colliders etc)
 
     delete_key(&_world.alive, _entityToDelete)
     delete_key(&_world.componentSignatures, _entityToDelete)
