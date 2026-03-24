@@ -1,6 +1,7 @@
 package components
 
 import math "core:math/linalg"
+import "../renderer"
 
 Component_Flag :: enum u16 {
     Name, 
@@ -28,9 +29,13 @@ Transform :: struct {
 }
 
 Sprite :: struct {
-    // texture 
-    size : math.Vector2f32, // Testing
-    color : [4]f32, // Testing
+    texture : renderer.Texture_Handle,
+    uv_min : [2]f32,
+    uv_max : [2]f32,
+    size : math.Vector2f32,
+    color : [4]f32, 
+    origin : [2]f32,
+    layer : i32,
 }
 
 Collider :: struct {

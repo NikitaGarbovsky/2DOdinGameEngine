@@ -4,94 +4,26 @@ import sdl "vendor:sdl3"
 import "../../platform"
 import "core:log"
 import math "core:math/linalg"
+import glm "core:math/linalg/glsl"
 
 Init :: proc(_renderer : ^Renderer, _platform : ^platform.Platform, _vert_code, _frag_code : []u8) -> bool {
     _renderer.gpu = _platform.gpu
     _renderer.window = _platform.window
     _renderer.clear_color = {0.0, 0.2, 0.4, 1.0} // #TODO: move somewhere else
 
-    // Create both shader infos for vert & frag
-    vert_shader_info := sdl.GPUShaderCreateInfo{
-        code_size = len(_vert_code),
-        code = raw_data(_vert_code),
-        entrypoint = "main",
-        format = {.SPIRV},
-        stage = .VERTEX,
-        num_samplers = 0,
-        num_storage_textures = 0,
-        num_storage_buffers = 0,
-        num_uniform_buffers = 1,
-        props = 0,
-    }
+    _renderer.camera.position = glm.vec2{0,0}
+    _renderer.camera.zoom = 1.0
+    _renderer.camera.viewport_size = glm.vec2{1920, 1080}
 
-    frag_shader_info := sdl.GPUShaderCreateInfo{
-        code_size = len(_frag_code),
-        code = raw_data(_frag_code),
-        entrypoint = "main",
-        format = {.SPIRV},
-        stage = .FRAGMENT,
-        num_samplers = 0,
-        num_storage_textures = 0,
-        num_storage_buffers = 0,
-        num_uniform_buffers = 1,
-        props = 0,
-    }
-
-    // Create both shaders
-    vert_shader := sdl.CreateGPUShader(_renderer.gpu, vert_shader_info)
-    if vert_shader == nil {
-        log.errorf("CreateGPUShader vertex failed: {}", sdl.GetError())
-        return false
-    }
-
-    frag_shader := sdl.CreateGPUShader(_renderer.gpu, frag_shader_info)
-    if frag_shader == nil {
-        log.errorf("CreateGPUShader fragment failed: {}", sdl.GetError())
-        sdl.ReleaseGPUShader(_renderer.gpu, vert_shader)
-        return false
-    }
-
-    color_target_desc := sdl.GPUColorTargetDescription{
-        format = sdl.GetGPUSwapchainTextureFormat(_renderer.gpu, _renderer.window),
-        blend_state = sdl.GPUColorTargetBlendState{
-            enable_blend = true,
-            alpha_blend_op = .ADD,
-            color_blend_op = .ADD,
-            src_color_blendfactor = .SRC_ALPHA,
-            src_alpha_blendfactor = .SRC_ALPHA,
-            dst_color_blendfactor = .ONE_MINUS_SRC_ALPHA,
-            dst_alpha_blendfactor = .ONE_MINUS_SRC_ALPHA,
-        },
-    }
-
-    pipeline_info := sdl.GPUGraphicsPipelineCreateInfo {
-        target_info = sdl.GPUGraphicsPipelineTargetInfo{
-            color_target_descriptions = &color_target_desc,
-            num_color_targets = 1,
-            depth_stencil_format = .INVALID,
-            has_depth_stencil_target = false,
-        },
-
-        primitive_type = .TRIANGLELIST,
-        vertex_shader = vert_shader,
-        fragment_shader = frag_shader,
-    }
-
-    _renderer.testing_entity_pipeline = sdl.CreateGPUGraphicsPipeline(_renderer.gpu, pipeline_info)
-
-    sdl.ReleaseGPUShader(_renderer.gpu, vert_shader)
-    sdl.ReleaseGPUShader(_renderer.gpu, frag_shader)
-
-    if _renderer.testing_entity_pipeline == nil {
-        log.errorf("CreateGPUGraphicsPipeline failed: {}", sdl.GetError())
-        return false
-    }
+    if !InitSpriteBatcher(_renderer, 65536) do return false
+    if !InitSpritePipeline(_renderer, _vert_code, _frag_code) do return false
 
     return true
 }
 
 BeginFrame :: proc(_renderer : ^Renderer, viewport_size : math.Vector2f32) -> bool {
     _renderer.viewport_size = viewport_size
+    _renderer.camera.viewport_size = viewport_size    
 
     _renderer.cmd_buf = sdl.AcquireGPUCommandBuffer(_renderer.gpu)
     if _renderer.cmd_buf == nil {
@@ -114,16 +46,26 @@ BeginFrame :: proc(_renderer : ^Renderer, viewport_size : math.Vector2f32) -> bo
         return false
     }
 
+    return true
+}
+
+// The main pass of rendering all the ECS world renderable entities
+BeginWorldPass :: proc(_renderer : ^Renderer) -> bool {
+    if _renderer.cmd_buf == nil do return false
+    if _renderer.swapchain_tex == nil do return false
+
     color_target := sdl.GPUColorTargetInfo{
         texture = _renderer.swapchain_tex,
         load_op = .CLEAR,
-        clear_color = {_renderer.clear_color[0], 
-            _renderer.clear_color[1], 
-            _renderer.clear_color[2], 
-            _renderer.clear_color[3]},
+        clear_color = {
+            _renderer.clear_color[0],
+            _renderer.clear_color[1],
+            _renderer.clear_color[2],
+            _renderer.clear_color[3],
+        },
         store_op = .STORE,
     }
-    
+
     _renderer.render_pass = sdl.BeginGPURenderPass(_renderer.cmd_buf, &color_target, 1, nil)
     if _renderer.render_pass == nil {
         log.errorf("BeginGPURenderPass failed: {}", sdl.GetError())
@@ -151,41 +93,50 @@ EndFrame :: proc(_renderer : ^Renderer) {
 }
 
 Shutdown :: proc(_renderer : ^Renderer) {
-    if _renderer.testing_entity_pipeline != nil {
-        sdl.ReleaseGPUGraphicsPipeline(_renderer.gpu, _renderer.testing_entity_pipeline)
-        _renderer.testing_entity_pipeline = nil
+    ShutdownSpriteBatcher(_renderer)
+
+    if _renderer.sprite_pipeline != nil {
+        sdl.ReleaseGPUGraphicsPipeline(_renderer.gpu, _renderer.sprite_pipeline)
+        _renderer.sprite_pipeline = nil
     }
 }
 
-BindTestingPipeline :: proc (_renderer : ^Renderer) {
-    if _renderer.render_pass == nil || _renderer.testing_entity_pipeline == nil do return
-    sdl.BindGPUGraphicsPipeline(_renderer.render_pass, _renderer.testing_entity_pipeline)
+BindMaterial :: proc(_renderer : ^Renderer, _material : Material_Key) {
+    // #TODO: look up gpu texture from texture handle
+    // look up the gpu sampler from sampler handle
+    // bind them before the batch draw
 }
 
-DrawQuad :: proc(
-    _renderer : ^Renderer,
-    _pos : math.Vector2f32,
-    _size : math.Vector2f32,
-    _rot : f32,
-    _color : [4]f32
-) {
-    if _renderer.render_pass == nil || _renderer.cmd_buf == nil do return
+UploadInstancedata :: proc(_renderer : ^Renderer, _instances : []Sprite_Instance) {
+    if len(_instances) == 0 do return
+    
+    bytes_needed : u32 = u32(len(_instances)) * size_of(Sprite_Instance)
+    assert(bytes_needed <= _renderer.sprite_batcher.max_instances * size_of(Sprite_Instance))
 
-    vs_uniform := Testing_VS_Uniform {
-        pos = {_pos.x, _pos.y},
-        size = {_size.x, _size.y},
-        rot = _rot,
-        _pad0  = 0,  
-        view = { _renderer.viewport_size.x, _renderer.viewport_size.y}
+    mapped_raw := sdl.MapGPUTransferBuffer(_renderer.gpu, _renderer.sprite_batcher.instance_transfer, true)
+    if mapped_raw == nil {
+        log.errorf("MapGPUTransferBuffer instance_transfer failed: {}", sdl.GetError())
+        return
     }
 
-    fs_uniform := Testing_FS_Uniform {
-        color = _color,
+    mapped_instances :=([^]Sprite_Instance)(mapped_raw)
+    copy(mapped_instances[:len(_instances)], _instances)
+
+    sdl.UnmapGPUTransferBuffer(_renderer.gpu, _renderer.sprite_batcher.instance_transfer)
+
+    copy_pass := sdl.BeginGPUCopyPass(_renderer.cmd_buf)
+
+    src := sdl.GPUTransferBufferLocation{
+        transfer_buffer = _renderer.sprite_batcher.instance_transfer,
+        offset = 0,
     }
 
-    sdl.PushGPUVertexUniformData(_renderer.cmd_buf, 0, &vs_uniform, size_of(Testing_VS_Uniform))
-    sdl.PushGPUFragmentUniformData(_renderer.cmd_buf, 0, &fs_uniform, size_of(Testing_FS_Uniform))
+    dst := sdl.GPUBufferRegion{
+        buffer = _renderer.sprite_batcher.instance_buffer,
+        offset = 0,
+        size = bytes_needed,
+    }
 
-    // 6 vertices = 2 triangles
-    sdl.DrawGPUPrimitives(_renderer.render_pass, 6, 1, 0, 0)
+    sdl.UploadToGPUBuffer(copy_pass, src, dst, true)
+    sdl.EndGPUCopyPass(copy_pass)
 }
