@@ -34,7 +34,7 @@ Init :: proc(_app : ^AppState) {
 
 	// Temp setting for camera testing
 	_app.renderer.camera.position = {960, 540}
-	_app.renderer.camera.zoom = 1
+	_app.renderer.camera.zoom = 1.5
 }
 
 Run :: proc(_app : ^AppState) {

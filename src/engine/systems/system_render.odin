@@ -4,7 +4,7 @@ import "../ecs"
 import "../renderer"
 
 RenderWorld :: proc(_world : ^ecs.EntityWorld, _renderer : ^renderer.Renderer) {
-    ExtractRenderItems(_world, &_renderer.sprite_batcher.items)
+    ExtractRenderItems(_world, _renderer ,&_renderer.sprite_batcher.items)
     renderer.SortRenderItems(_renderer.sprite_batcher.items[:])
 
     renderer.Build_Batches(
@@ -19,7 +19,7 @@ RenderWorld :: proc(_world : ^ecs.EntityWorld, _renderer : ^renderer.Renderer) {
     renderer.SubmitSpriteBatches(_renderer, _renderer.sprite_batcher.batches[:])
 }
 
-ExtractRenderItems :: proc(_world : ^ecs.EntityWorld, _out_items : ^[dynamic]renderer.Render_Item) {
+ExtractRenderItems :: proc(_world : ^ecs.EntityWorld, _renderer : ^renderer.Renderer ,_out_items : ^[dynamic]renderer.Render_Item) {
     clear(_out_items)
 
     for i := 0; i < len(_world.sprites.entities); i += 1 {
@@ -29,6 +29,10 @@ ExtractRenderItems :: proc(_world : ^ecs.EntityWorld, _out_items : ^[dynamic]ren
         // Don't extract any render items that dont have a transform (they're static)
         transform, ok := ecs.GetComponent(&_world.transforms, e)
         if !ok do continue
+
+        // Don't extract renderables that aren't visibel (culling)
+        // #TODO: Put this into a debug window for imgui
+        if !IsSpriteVisible(&_renderer.camera, transform^, sprite) do continue
 
         item := renderer.Render_Item{
             pass = .World,
