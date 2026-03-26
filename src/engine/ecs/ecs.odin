@@ -9,6 +9,7 @@ Init :: proc(_world : ^EntityWorld) {
 
     _world.transforms.index_of = make(map[Entity]int)
     _world.sprites.index_of = make(map[Entity]int) 
+    _world.names.index_of = make(map[Entity]int)
 }
 
 CreateEntity :: proc (_world : ^EntityWorld) -> Entity {

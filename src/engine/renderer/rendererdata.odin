@@ -30,13 +30,15 @@ Renderer :: struct {
     swapchain_tex : ^sdl.GPUTexture,
     render_pass : ^sdl.GPURenderPass,
 
-    //testing_entity_pipeline : ^sdl.GPUGraphicsPipeline,
     sprite_pipeline : ^sdl.GPUGraphicsPipeline, 
 
     clear_color : [4]f32,
     viewport_size : math.Vector2f32,
     camera : Camera2D,
     sprite_batcher : Sprite_Batcher,
+
+    textures : [dynamic]Texture_Resource,
+    samplers : [dynamic]Sampler_Resource,
 }
 
 // Holds the shared uniform data for the batched sprites
@@ -46,12 +48,17 @@ Sprite_Global_VS_Uniform :: struct {
 
 Quad_Vertex :: struct {
     local_pos : [2]f32,
-    //uv : [2]f32,
+    uv : [2]f32,
 }
 
 // Data for the rendered Sprite
 Sprite_Instance :: struct {
-    model : glm.mat4, 
+    model : glm.mat4,
+    // min & max are used to dictate a smaller rect for the sprite to sample from,
+    // for future sprite sheets, animation, optimizations of gpu texture sending etc..
+    // #TODO: Use this for animation when implemented!
+    uv_min : [2]f32, 
+    uv_max : [2]f32,
     color : [4]f32, // vec4
 }
 
@@ -85,6 +92,16 @@ Sprite_Batcher :: struct {
     items : [dynamic]Render_Item,
     instances : [dynamic]Sprite_Instance,
     batches : [dynamic]Batch,
+}
+
+Texture_Resource :: struct {
+    gpu : ^sdl.GPUTexture,
+    width : u32,
+    height : u32,
+}
+
+Sampler_Resource :: struct {
+    gpu : ^sdl.GPUSampler,
 }
 
 // =============== Sort & Batch Keys ===============

@@ -20,7 +20,7 @@ ComponentMask :: proc(_flag : Component_Flag) -> u16 {
 }
 
 Name :: struct {
-
+    entityName : string,
 }
 
 Transform :: struct {
@@ -30,7 +30,10 @@ Transform :: struct {
 
 Sprite :: struct {
     texture : renderer.Texture_Handle,
-    uv_min : [2]f32,
+    // min & max are used to dictate a smaller rect for the sprite to sample from,
+    // for future sprite sheets, animation, optimizations of gpu texture sending etc..
+    // #TODO: Use this for animation when implemented!
+    uv_min : [2]f32, 
     uv_max : [2]f32,
     size : math.Vector2f32,
     color : [4]f32, 

@@ -15,6 +15,10 @@ Init :: proc(_renderer : ^Renderer, _platform : ^platform.Platform, _vert_code, 
     _renderer.camera.zoom = 1.0
     _renderer.camera.viewport_size = glm.vec2{1920, 1080}
 
+    _renderer.textures = make([dynamic]Texture_Resource, 0, 64)
+    _renderer.samplers = make([dynamic]Sampler_Resource, 0, 8)
+
+    if !CreateDefaultTextureAndSampler(_renderer) do return false
     if !InitSpriteBatcher(_renderer, 65536) do return false
     if !InitSpritePipeline(_renderer, _vert_code, _frag_code) do return false
 
@@ -99,44 +103,21 @@ Shutdown :: proc(_renderer : ^Renderer) {
         sdl.ReleaseGPUGraphicsPipeline(_renderer.gpu, _renderer.sprite_pipeline)
         _renderer.sprite_pipeline = nil
     }
-}
 
-BindMaterial :: proc(_renderer : ^Renderer, _material : Material_Key) {
-    // #TODO: look up gpu texture from texture handle
-    // look up the gpu sampler from sampler handle
-    // bind them before the batch draw
-}
-
-UploadInstancedata :: proc(_renderer : ^Renderer, _instances : []Sprite_Instance) {
-    if len(_instances) == 0 do return
-    
-    bytes_needed : u32 = u32(len(_instances)) * size_of(Sprite_Instance)
-    assert(bytes_needed <= _renderer.sprite_batcher.max_instances * size_of(Sprite_Instance))
-
-    mapped_raw := sdl.MapGPUTransferBuffer(_renderer.gpu, _renderer.sprite_batcher.instance_transfer, true)
-    if mapped_raw == nil {
-        log.errorf("MapGPUTransferBuffer instance_transfer failed: {}", sdl.GetError())
-        return
+    for i := 0; i < len(_renderer.textures); i += 1 {
+        if _renderer.textures[i].gpu != nil {
+            sdl.ReleaseGPUTexture(_renderer.gpu, _renderer.textures[i].gpu)
+            _renderer.textures[i].gpu = nil
+        }
     }
 
-    mapped_instances :=([^]Sprite_Instance)(mapped_raw)
-    copy(mapped_instances[:len(_instances)], _instances)
-
-    sdl.UnmapGPUTransferBuffer(_renderer.gpu, _renderer.sprite_batcher.instance_transfer)
-
-    copy_pass := sdl.BeginGPUCopyPass(_renderer.cmd_buf)
-
-    src := sdl.GPUTransferBufferLocation{
-        transfer_buffer = _renderer.sprite_batcher.instance_transfer,
-        offset = 0,
+    for i := 0; i < len(_renderer.samplers); i += 1 {
+        if _renderer.samplers[i].gpu != nil {
+            sdl.ReleaseGPUSampler(_renderer.gpu, _renderer.samplers[i].gpu)
+            _renderer.samplers[i].gpu = nil
+        }
     }
 
-    dst := sdl.GPUBufferRegion{
-        buffer = _renderer.sprite_batcher.instance_buffer,
-        offset = 0,
-        size = bytes_needed,
-    }
-
-    sdl.UploadToGPUBuffer(copy_pass, src, dst, true)
-    sdl.EndGPUCopyPass(copy_pass)
+    delete(_renderer.textures)
+    delete(_renderer.samplers)
 }

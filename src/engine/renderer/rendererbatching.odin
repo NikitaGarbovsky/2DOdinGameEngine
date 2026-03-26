@@ -45,6 +45,7 @@ QuickSortRenderItems :: proc(_items : []Render_Item, lo, hi : int) {
     if i < hi do QuickSortRenderItems(_items, i, hi)
 }
 
+// Used to sort the renderable items pre-batching
 SortRenderItems :: proc(_items : []Render_Item) {
     if len(_items) <= 1 do return
     QuickSortRenderItems(_items, 0, len(_items) - 1)
@@ -60,10 +61,10 @@ InitSpriteBatcher :: proc(_renderer : ^Renderer, _max_instances : u32) -> bool {
     batcher.batches = make([dynamic]Batch, 0, 256)
 
     quad_vertices := [4]Quad_Vertex{
-        {local_pos = {0.0, 0.0}}, //uv = {0.0, 0.0}},
-        {local_pos = {1.0, 0.0}}, //uv = {1.0, 0.0}},
-        {local_pos = {1.0, 1.0}}, //uv = {1.0, 1.0}},
-        {local_pos = {0.0, 1.0}}, //uv = {0.0, 1.0}},
+        {local_pos = {0.0, 0.0}, uv = {0.0, 0.0}},
+        {local_pos = {1.0, 0.0}, uv = {1.0, 0.0}},
+        {local_pos = {1.0, 1.0}, uv = {1.0, 1.0}},
+        {local_pos = {0.0, 1.0}, uv = {0.0, 1.0}},
     }
 
     quad_indices := [6]u16{0, 1, 2, 0, 2, 3}
@@ -206,7 +207,8 @@ InitSpriteBatcher :: proc(_renderer : ^Renderer, _max_instances : u32) -> bool {
     return true
 }
 
-Build_Batches :: proc(_items : []Render_Item, _out_instances : ^[dynamic]Sprite_Instance, _out_batches : ^[dynamic]Batch) {
+// Builds the batches of renderable items for the scene
+BuildBatches :: proc(_items : []Render_Item, _out_instances : ^[dynamic]Sprite_Instance, _out_batches : ^[dynamic]Batch) {
     clear(_out_instances)
     clear(_out_batches)
 
@@ -271,7 +273,7 @@ InitSpritePipeline :: proc(_renderer : ^Renderer, _vert_code, _frag_code : []u8)
         entrypoint           = "main",
         format               = {.SPIRV},
         stage                = .FRAGMENT,
-        num_samplers         = 0,
+        num_samplers         = 1,
         num_storage_textures = 0,
         num_storage_buffers  = 0,
         num_uniform_buffers  = 0,
@@ -306,41 +308,59 @@ InitSpritePipeline :: proc(_renderer : ^Renderer, _vert_code, _frag_code : []u8)
         },
     }
 
-    // locations 1 - 4 are passed in as .FLOAT4's, but when they reach 
+    // locations 2 - 5 are passed in as .FLOAT4's (modelmatrix), but when they reach 
     // the gpu the v shader accepts them as a single mat4, not sure why or how,
-    vertex_attrs := [6]sdl.GPUVertexAttribute{
-        {
+    vertex_attrs := [9]sdl.GPUVertexAttribute{
+        { // Local position
             location    = 0,
             buffer_slot = 0,
             format      = .FLOAT2,
             offset      = u32(offset_of(Quad_Vertex, local_pos)),
         },
-        {
+        { // UV
             location    = 1,
+            buffer_slot = 0,
+            format      = .FLOAT2,
+            offset      = u32(offset_of(Quad_Vertex, uv)),
+        },
+        { // model matrix column 1
+            location    = 2,
             buffer_slot = 1,
             format      = .FLOAT4,
             offset      = u32(offset_of(Sprite_Instance, model)) + 0,
         },
-        {
-            location    = 2,
+        { // model matrix column 2
+            location    = 3,
             buffer_slot = 1,
             format      = .FLOAT4,
             offset      = u32(offset_of(Sprite_Instance, model)) + 16,
         },
-        {
-            location    = 3,
+        { // model matrix column 3
+            location    = 4,
             buffer_slot = 1,
             format      = .FLOAT4,
             offset      = u32(offset_of(Sprite_Instance, model)) + 32,
         },
-        {
-            location    = 4,
+        { // model matrix column 4
+            location    = 5,
             buffer_slot = 1,
             format      = .FLOAT4,
             offset      = u32(offset_of(Sprite_Instance, model)) + 48,
         },
         {
-            location    = 5,
+            location    = 6,
+            buffer_slot = 1,
+            format      = .FLOAT2,
+            offset      = u32(offset_of(Sprite_Instance, uv_min)),
+        },
+        {
+            location    = 7,
+            buffer_slot = 1,
+            format      = .FLOAT2,
+            offset      = u32(offset_of(Sprite_Instance, uv_max)),
+        },
+        {
+            location    = 8,
             buffer_slot = 1,
             format      = .FLOAT4,
             offset      = u32(offset_of(Sprite_Instance, color)),
@@ -369,7 +389,7 @@ InitSpritePipeline :: proc(_renderer : ^Renderer, _vert_code, _frag_code : []u8)
             vertex_buffer_descriptions = &vertex_buffer_descs[0],
             num_vertex_buffers         = 2,
             vertex_attributes          = &vertex_attrs[0],
-            num_vertex_attributes      = 6,
+            num_vertex_attributes      = len(vertex_attrs),
         },
 
         primitive_type = .TRIANGLELIST,
@@ -419,6 +439,7 @@ InitSpritePipeline :: proc(_renderer : ^Renderer, _vert_code, _frag_code : []u8)
     return true
 }
 
+// 
 SubmitSpriteBatches :: proc(_renderer : ^Renderer, _batches : []Batch) {
     if _renderer.render_pass == nil do return
     if _renderer.sprite_pipeline == nil do return
@@ -469,6 +490,64 @@ SubmitSpriteBatches :: proc(_renderer : ^Renderer, _batches : []Batch) {
             batch.first_instance,
         )
     }
+}
+
+// Helper to look up the material resource and binds them (before the batch draw)
+BindMaterial :: proc(_renderer : ^Renderer, _material : Material_Key) {
+    tex_index := int(_material.texture)
+    samp_index := int(_material.sampler)
+
+    if tex_index < 0 || tex_index >= len(_renderer.textures) {
+        tex_index = int(Default_Texture_Handle)
+    }
+    if samp_index < 0 || samp_index >= len(_renderer.samplers) {
+        samp_index = int(Default_Sampler_Handle)
+    }
+
+    binding := sdl.GPUTextureSamplerBinding{
+        texture = _renderer.textures[tex_index].gpu,
+        sampler = _renderer.samplers[samp_index].gpu,
+    }
+
+    sdl.BindGPUFragmentSamplers(_renderer.render_pass, 0, & binding, 1)
+}
+
+// Uploads all the sprite instances to the gpu that are due to be renderered, asynchronously (on gpu)
+UploadInstancedata :: proc(_renderer : ^Renderer, _instances : []Sprite_Instance) {
+    if len(_instances) == 0 do return
+
+    // #TODO: Add this to dear-imgui renderer debug output
+    //fmt.printfln("Sprite_Instance Count {}", len(_instances))
+
+    bytes_needed : u32 = u32(len(_instances)) * size_of(Sprite_Instance)
+    assert(bytes_needed <= _renderer.sprite_batcher.max_instances * size_of(Sprite_Instance))
+
+    mapped_raw := sdl.MapGPUTransferBuffer(_renderer.gpu, _renderer.sprite_batcher.instance_transfer, true)
+    if mapped_raw == nil {
+        log.errorf("MapGPUTransferBuffer instance_transfer failed: {}", sdl.GetError())
+        return
+    }
+
+    mapped_instances :=([^]Sprite_Instance)(mapped_raw)
+    copy(mapped_instances[:len(_instances)], _instances)
+
+    sdl.UnmapGPUTransferBuffer(_renderer.gpu, _renderer.sprite_batcher.instance_transfer)
+
+    copy_pass := sdl.BeginGPUCopyPass(_renderer.cmd_buf)
+
+    src := sdl.GPUTransferBufferLocation{
+        transfer_buffer = _renderer.sprite_batcher.instance_transfer,
+        offset = 0,
+    }
+
+    dst := sdl.GPUBufferRegion{
+        buffer = _renderer.sprite_batcher.instance_buffer,
+        offset = 0,
+        size = bytes_needed,
+    }
+
+    sdl.UploadToGPUBuffer(copy_pass, src, dst, true)
+    sdl.EndGPUCopyPass(copy_pass)
 }
 
 ShutdownSpriteBatcher :: proc(_renderer : ^Renderer) {
