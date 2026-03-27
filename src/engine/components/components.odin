@@ -1,7 +1,7 @@
 package components
 
 import math "core:math/linalg"
-import "../renderer"
+import renderdata "../renderdata"
 
 Component_Flag :: enum u16 {
     Name, 
@@ -29,7 +29,7 @@ Transform :: struct {
 }
 
 Sprite :: struct {
-    texture : renderer.Texture_Handle,
+    texture : renderdata.Texture_Handle,
     // min & max are used to dictate a smaller rect for the sprite to sample from,
     // for future sprite sheets, animation, optimizations of gpu texture sending etc..
     // #TODO: Use this for animation when implemented!

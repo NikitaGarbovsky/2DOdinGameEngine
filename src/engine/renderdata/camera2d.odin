@@ -1,4 +1,4 @@
-package renderer
+package renderdata
 
 import glm "core:math/linalg/glsl"
 

@@ -3,6 +3,7 @@ package systems
 import "../ecs"
 import "../renderer"
 import "core:log"
+import renderdata "../renderdata"
 
 // Renders all renderable entities that are held in the entity world
 RenderWorld :: proc(_world : ^ecs.EntityWorld, _renderer : ^renderer.Renderer) {
@@ -22,7 +23,7 @@ RenderWorld :: proc(_world : ^ecs.EntityWorld, _renderer : ^renderer.Renderer) {
 }
 
 // Store all the renderable items that qualify to be rendered into an array
-ExtractRenderItems :: proc(_world : ^ecs.EntityWorld, _renderer : ^renderer.Renderer ,_out_items : ^[dynamic]renderer.Render_Item) {
+ExtractRenderItems :: proc(_world : ^ecs.EntityWorld, _renderer : ^renderer.Renderer ,_out_items : ^[dynamic]renderdata.Render_Item) {
     clear(_out_items)
 
     // #TODO: add renderable tilemap stuff here when implemented
@@ -43,20 +44,20 @@ ExtractRenderItems :: proc(_world : ^ecs.EntityWorld, _renderer : ^renderer.Rend
         // #TODO: Put this into a debug window for imgui
         if !IsSpriteVisible(&_renderer.camera, transform^, sprite) do continue
 
-        item := renderer.Render_Item{
+        item := renderdata.Render_Item{
             pass = .World,
             sort_layer = sprite.layer,
             y_sort = transform.pos.y,
 
-            material = renderer.Material_Key{
+            material = renderdata.Material_Key{
                 pipeline = .Sprite,
                 texture = sprite.texture,
-                sampler = renderer.Default_Sampler_Handle,
+                sampler = renderdata.Default_Sampler_Handle,
                 blend = .Alpha
             },
 
-            instance = renderer.Sprite_Instance{
-                model = renderer.MakeSpriteModelMatrix(
+            instance = renderdata.Sprite_Instance{
+                model = renderdata.MakeSpriteModelMatrix(
                     {transform.pos.x, transform.pos.y},
                     {sprite.size.x, sprite.size.y},
                     {sprite.origin.x, sprite.origin.y},

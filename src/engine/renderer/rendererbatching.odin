@@ -2,10 +2,11 @@ package renderer
 
 import "core:log"
 import sdl "vendor:sdl3"
+import renderdata "../renderdata"
 import "core:fmt"
 
 @private
-RenderItemLess :: proc(_a, _b : Render_Item) -> bool {
+RenderItemLess :: proc(_a, _b : renderdata.Render_Item) -> bool {
     if _a.pass != _b.pass do return u8(_a.pass) < u8(_b.pass)
     if _a.sort_layer != _b.sort_layer do return _a.sort_layer < _b.sort_layer
 
@@ -18,12 +19,12 @@ RenderItemLess :: proc(_a, _b : Render_Item) -> bool {
 }
 
 @private 
-SwapRenderItems :: proc(_items : []Render_Item,i, j: int ) {
+SwapRenderItems :: proc(_items : []renderdata.Render_Item,i, j: int ) {
     _items[i], _items[j] = _items[j], _items[i]
 }
 
 @private 
-QuickSortRenderItems :: proc(_items : []Render_Item, lo, hi : int) {
+QuickSortRenderItems :: proc(_items : []renderdata.Render_Item, lo, hi : int) {
     if lo >= hi do return
 
     i := lo
@@ -46,7 +47,7 @@ QuickSortRenderItems :: proc(_items : []Render_Item, lo, hi : int) {
 }
 
 // Used to sort the renderable items pre-batching
-SortRenderItems :: proc(_items : []Render_Item) {
+SortRenderItems :: proc(_items : []renderdata.Render_Item) {
     if len(_items) <= 1 do return
     QuickSortRenderItems(_items, 0, len(_items) - 1)
 }
@@ -56,9 +57,9 @@ InitSpriteBatcher :: proc(_renderer : ^Renderer, _max_instances : u32) -> bool {
     batcher := &_renderer.sprite_batcher
     batcher.max_instances = _max_instances
 
-    batcher.items = make([dynamic]Render_Item, 0, int(_max_instances))
-    batcher.instances = make([dynamic]Sprite_Instance, 0, int(_max_instances))
-    batcher.batches = make([dynamic]Batch, 0, 256)
+    batcher.items = make([dynamic]renderdata.Render_Item, 0, int(_max_instances))
+    batcher.instances = make([dynamic]renderdata.Sprite_Instance, 0, int(_max_instances))
+    batcher.batches = make([dynamic]renderdata.Batch, 0, 256)
 
     quad_vertices := [4]Quad_Vertex{
         {local_pos = {0.0, 0.0}, uv = {0.0, 0.0}},
@@ -71,7 +72,7 @@ InitSpriteBatcher :: proc(_renderer : ^Renderer, _max_instances : u32) -> bool {
 
     quad_vb_size := u32(len(quad_vertices)) * u32(size_of(Quad_Vertex))
     quad_ib_size := u32(len(quad_indices)) * u32(size_of(u16))
-    instance_buffer_size := _max_instances * u32(size_of(Sprite_Instance))
+    instance_buffer_size := _max_instances * u32(size_of(renderdata.Sprite_Instance))
 
     batcher.quad_vb = sdl.CreateGPUBuffer(_renderer.gpu, sdl.GPUBufferCreateInfo{
         usage = {.VERTEX},
@@ -208,7 +209,7 @@ InitSpriteBatcher :: proc(_renderer : ^Renderer, _max_instances : u32) -> bool {
 }
 
 // Builds the batches of renderable items for the scene
-BuildBatches :: proc(_items : []Render_Item, _out_instances : ^[dynamic]Sprite_Instance, _out_batches : ^[dynamic]Batch) {
+BuildBatches :: proc(_items : []renderdata.Render_Item, _out_instances : ^[dynamic]renderdata.Sprite_Instance, _out_batches : ^[dynamic]renderdata.Batch) {
     clear(_out_instances)
     clear(_out_batches)
 
@@ -223,7 +224,7 @@ BuildBatches :: proc(_items : []Render_Item, _out_instances : ^[dynamic]Sprite_I
         same_batch := item.pass == current_pass && item.material == current_material
 
         if !same_batch {
-            append(_out_batches, Batch{
+            append(_out_batches, renderdata.Batch{
                 material = current_material,
                 pass = current_pass,
                 first_instance = first_instance,
@@ -240,7 +241,7 @@ BuildBatches :: proc(_items : []Render_Item, _out_instances : ^[dynamic]Sprite_I
         count += 1
     }
 
-    append(_out_batches, Batch{
+    append(_out_batches, renderdata.Batch{
         material = current_material,
         pass = current_pass,
         first_instance = first_instance,
@@ -302,7 +303,7 @@ InitSpritePipeline :: proc(_renderer : ^Renderer, _vert_code, _frag_code : []u8)
         },
         {
             slot               = 1,
-            pitch              = u32(size_of(Sprite_Instance)),
+            pitch              = u32(size_of(renderdata.Sprite_Instance)),
             input_rate         = .INSTANCE,
             instance_step_rate = 0,
         },
@@ -327,43 +328,43 @@ InitSpritePipeline :: proc(_renderer : ^Renderer, _vert_code, _frag_code : []u8)
             location    = 2,
             buffer_slot = 1,
             format      = .FLOAT4,
-            offset      = u32(offset_of(Sprite_Instance, model)) + 0,
+            offset      = u32(offset_of(renderdata.Sprite_Instance, model)) + 0,
         },
         { // model matrix column 2
             location    = 3,
             buffer_slot = 1,
             format      = .FLOAT4,
-            offset      = u32(offset_of(Sprite_Instance, model)) + 16,
+            offset      = u32(offset_of(renderdata.Sprite_Instance, model)) + 16,
         },
         { // model matrix column 3
             location    = 4,
             buffer_slot = 1,
             format      = .FLOAT4,
-            offset      = u32(offset_of(Sprite_Instance, model)) + 32,
+            offset      = u32(offset_of(renderdata.Sprite_Instance, model)) + 32,
         },
         { // model matrix column 4
             location    = 5,
             buffer_slot = 1,
             format      = .FLOAT4,
-            offset      = u32(offset_of(Sprite_Instance, model)) + 48,
+            offset      = u32(offset_of(renderdata.Sprite_Instance, model)) + 48,
         },
         {
             location    = 6,
             buffer_slot = 1,
             format      = .FLOAT2,
-            offset      = u32(offset_of(Sprite_Instance, uv_min)),
+            offset      = u32(offset_of(renderdata.Sprite_Instance, uv_min)),
         },
         {
             location    = 7,
             buffer_slot = 1,
             format      = .FLOAT2,
-            offset      = u32(offset_of(Sprite_Instance, uv_max)),
+            offset      = u32(offset_of(renderdata.Sprite_Instance, uv_max)),
         },
         {
             location    = 8,
             buffer_slot = 1,
             format      = .FLOAT4,
-            offset      = u32(offset_of(Sprite_Instance, color)),
+            offset      = u32(offset_of(renderdata.Sprite_Instance, color)),
         },
     }
 
@@ -440,13 +441,13 @@ InitSpritePipeline :: proc(_renderer : ^Renderer, _vert_code, _frag_code : []u8)
 }
 
 // 
-SubmitSpriteBatches :: proc(_renderer : ^Renderer, _batches : []Batch) {
+SubmitSpriteBatches :: proc(_renderer : ^Renderer, _batches : []renderdata.Batch) {
     if _renderer.render_pass == nil do return
     if _renderer.sprite_pipeline == nil do return
     if len(_batches) == 0 do return
 
     global_vs := Sprite_Global_VS_Uniform{
-        view_proj = CameraViewProjMatrix(&_renderer.camera)
+        view_proj = renderdata.CameraViewProjMatrix(&_renderer.camera)
     }
 
     // This persists across the batch, very nice optimization
@@ -471,7 +472,7 @@ SubmitSpriteBatches :: proc(_renderer : ^Renderer, _batches : []Batch) {
     }
     sdl.BindGPUIndexBuffer(_renderer.render_pass, ib_binding, ._16BIT)
 
-    current_material : Material_Key
+    current_material : renderdata.Material_Key
     first := true
 
     for batch in _batches {
@@ -493,15 +494,15 @@ SubmitSpriteBatches :: proc(_renderer : ^Renderer, _batches : []Batch) {
 }
 
 // Helper to look up the material resource and binds them (before the batch draw)
-BindMaterial :: proc(_renderer : ^Renderer, _material : Material_Key) {
+BindMaterial :: proc(_renderer : ^Renderer, _material : renderdata.Material_Key) {
     tex_index := int(_material.texture)
     samp_index := int(_material.sampler)
 
     if tex_index < 0 || tex_index >= len(_renderer.textures) {
-        tex_index = int(Default_Texture_Handle)
+        tex_index = int(renderdata.Default_Texture_Handle)
     }
     if samp_index < 0 || samp_index >= len(_renderer.samplers) {
-        samp_index = int(Default_Sampler_Handle)
+        samp_index = int(renderdata.Default_Sampler_Handle)
     }
 
     binding := sdl.GPUTextureSamplerBinding{
@@ -513,14 +514,14 @@ BindMaterial :: proc(_renderer : ^Renderer, _material : Material_Key) {
 }
 
 // Uploads all the sprite instances to the gpu that are due to be renderered, asynchronously (on gpu)
-UploadInstancedata :: proc(_renderer : ^Renderer, _instances : []Sprite_Instance) {
+UploadInstancedata :: proc(_renderer : ^Renderer, _instances : []renderdata.Sprite_Instance) {
     if len(_instances) == 0 do return
 
     // #TODO: Add this to dear-imgui renderer debug output
     //fmt.printfln("Sprite_Instance Count {}", len(_instances))
 
-    bytes_needed : u32 = u32(len(_instances)) * size_of(Sprite_Instance)
-    assert(bytes_needed <= _renderer.sprite_batcher.max_instances * size_of(Sprite_Instance))
+    bytes_needed : u32 = u32(len(_instances)) * size_of(renderdata.Sprite_Instance)
+    assert(bytes_needed <= _renderer.sprite_batcher.max_instances * size_of(renderdata.Sprite_Instance))
 
     mapped_raw := sdl.MapGPUTransferBuffer(_renderer.gpu, _renderer.sprite_batcher.instance_transfer, true)
     if mapped_raw == nil {
@@ -528,7 +529,7 @@ UploadInstancedata :: proc(_renderer : ^Renderer, _instances : []Sprite_Instance
         return
     }
 
-    mapped_instances :=([^]Sprite_Instance)(mapped_raw)
+    mapped_instances :=([^]renderdata.Sprite_Instance)(mapped_raw)
     copy(mapped_instances[:len(_instances)], _instances)
 
     sdl.UnmapGPUTransferBuffer(_renderer.gpu, _renderer.sprite_batcher.instance_transfer)

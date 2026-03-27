@@ -2,11 +2,11 @@ package systems
 
 import glm "core:math/linalg/glsl"
 import "../components"
-import "../renderer"
 import omath "core:math"
+import renderdata "../renderdata"
 
 @private
-RectOverlaps :: proc(_a, _b : renderer.Rect2D) -> bool {
+RectOverlaps :: proc(_a, _b : renderdata.Rect2D) -> bool {
     if _a.max[0] < _b.min[0] do return false
     if _a.min[0] > _b.max[0] do return false
     if _a.max[1] < _b.min[1] do return false
@@ -16,7 +16,7 @@ RectOverlaps :: proc(_a, _b : renderer.Rect2D) -> bool {
 
 @private
 SpriteWorldAABB :: proc(_transform : components.Transform, 
-    _sprite : components.Sprite) -> renderer.Rect2D {
+    _sprite : components.Sprite) -> renderdata.Rect2D {
         
     width := _sprite.size.x
     height := _sprite.size.y
@@ -41,17 +41,17 @@ SpriteWorldAABB :: proc(_transform : components.Transform,
     ex := omath.abs(c) * hw + omath.abs(sn) * hh
     ey := omath.abs(sn) * hw + omath.abs(c) * hh
 
-    return renderer.Rect2D{
+    return renderdata.Rect2D{
         min = glm.vec2{world_center[0] - ex, world_center[1] - ey},
         max = glm.vec2{world_center[0] + ex, world_center[1] + ey},
     }
 }
 
-IsSpriteVisible :: proc(_cam : ^renderer.Camera2D, 
+IsSpriteVisible :: proc(_cam : ^renderdata.Camera2D, 
     _transform : components.Transform, 
     _sprite : components.Sprite) -> bool
 {
-    cam_rect := renderer.CameraWorldRect(_cam)
+    cam_rect := renderdata.CameraWorldRect(_cam)
     sprite_rect := SpriteWorldAABB(_transform, _sprite)
     return RectOverlaps(cam_rect, sprite_rect)
 }
