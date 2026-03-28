@@ -6,6 +6,7 @@ import "base:runtime"
 import "../engine/ecs"
 import "../engine/renderer"
 import "../platform"
+import "../engine/tilemap"
 
 default_context : runtime.Context // #TODO: hook this up with sdl platform
 
@@ -15,6 +16,7 @@ AppState :: struct {
 	world : ecs.EntityWorld,
 	renderer : renderer.Renderer, 
 	stats    : Frame_Stats,
+    level : tilemap.Level_State
 }
 appState : AppState
 

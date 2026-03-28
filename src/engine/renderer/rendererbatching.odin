@@ -441,7 +441,7 @@ InitSpritePipeline :: proc(_renderer : ^Renderer, _vert_code, _frag_code : []u8)
 }
 
 // 
-SubmitSpriteBatches :: proc(_renderer : ^Renderer, _batches : []renderdata.Batch) {
+SubmitRenderBatches :: proc(_renderer : ^Renderer, _batches : []renderdata.Batch) {
     if _renderer.render_pass == nil do return
     if _renderer.sprite_pipeline == nil do return
     if len(_batches) == 0 do return

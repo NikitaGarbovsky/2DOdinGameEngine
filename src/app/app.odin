@@ -4,22 +4,23 @@ import "../platform"
 import "../engine/ecs"
 import "../engine/renderer"
 import "../engine/systems"
-import "../engine/components"
 import "../engine/assets"
 import math "core:math/linalg"
-import "core:math/rand"
+import "../engine/tilemap"
+import "../engine/renderdata"
 
 // Temp shader loading
 shader_frag_batch := #load("../../Resources/Shaders/sprite_batch.frag.spv")
 shader_vert_batch := #load("../../Resources/Shaders/sprite_batch.vert.spv")
 
 Init :: proc(_app : ^AppState) {
+
+	// Initialize all the systems of the application
 	platform.Init(&_app.platform)
 	ecs.Init(&_app.world)
 	renderer.Init(&_app.renderer, &_app.platform, shader_vert_batch, shader_frag_batch)
+	tilemap.InitLevelState(&_app.level,64,32)
 	InitFrameStats(&_app.stats)
-
-	// checkerTexture, ok := renderer.CreateCheckerTexture2x2(&_app.renderer); assert(ok)
 
 	sprite_path := "Resources/Sprites/tileset_cave_1.png"
 	image, ok := assets.LoadImageFile(sprite_path); assert(ok)
@@ -27,36 +28,30 @@ Init :: proc(_app : ^AppState) {
 
 	sprite_texture, ok2 := renderer.CreateTextureFromImage(&_app.renderer, image); assert(ok2)
 
-	xoffset, yoffset : f32
-	// testing code for spawning a bunch of entities
-	for i : f32; i < 100; i += 1 {
-		e := ecs.CreateEntity(&_app.world)
-		ecs.AddComponentToEntityWorld(&_app.world, &_app.world.transforms, e, components.Transform{{0 + xoffset, 30 + yoffset}, 0}, .Transform)
-		ecs.AddComponentToEntityWorld(&_app.world, 
-			&_app.world.sprites, 
-			e, 
-			components.Sprite{
-				texture = sprite_texture,
-				uv_min = {0, 0.03125},
-				uv_max = {0.0625,0.0625},
-				size = {64, 32},
-				color = {1,1, 1, 1},
-				origin = {0.5, 0.5},
-				layer = 0,
-			},
-			.Sprite)
-		if xoffset >= 1920 {
-			yoffset += 32
-			xoffset = 0
-		}
-		xoffset += 64
+	// ================== TEMP TILE TESTING ==================
+	tilemap.RegisterTileDef(&_app.level.defs, &tilemap.Tile_Definition{
+		key = "ground",
+		texture = sprite_texture,
+		sampler = renderdata.Default_Sampler_Handle,
+		uv_min = {0, 0.03125},
+		uv_max = {0.0625,0.0625},
+		size = {64, 32},
+		origin = {0.5, 0.5},
+		layer = 0,
+		collision = .None,
+	})
 
-		ecs.AddComponentToEntityWorld(&_app.world, &_app.world.names, e, components.Name{"default name"}, .Name)
-	}
+	ground_id, _ := tilemap.FindTileDefByKey(&_app.level.defs, "ground")
 
-	// Temp setting for camera testing, #TODO: remove when input is 
+	tilemap.PlaceTile(&_app.level.tmap, tilemap.Tile_Coord{30, 0}, ground_id)
+	tilemap.PlaceTile(&_app.level.tmap, tilemap.Tile_Coord{31, 0}, ground_id)
+	tilemap.PlaceTile(&_app.level.tmap, tilemap.Tile_Coord{30, 1}, ground_id)
+	tilemap.PlaceTile(&_app.level.tmap, tilemap.Tile_Coord{31, 1}, ground_id)
+	tilemap.PlaceTile(&_app.level.tmap, tilemap.Tile_Coord{32, 1}, ground_id)
+
+	// Temp setting for camera testing, #TODO: remove when input(mouse scroll/camera zoom) is implemented
 	_app.renderer.camera.position = {960, 540}
-	_app.renderer.camera.zoom = 1
+	_app.renderer.camera.zoom = 2
 }
 
 Run :: proc(_app : ^AppState) {
@@ -67,21 +62,8 @@ Run :: proc(_app : ^AppState) {
 		viewport_size.x = f32(_app.platform.width)
 		viewport_size.y = f32(_app.platform.height)
 
-		// Testing movement, #TODO: probably just remove at some stage.
-		// for v in _app.world.alive {
-		// 	transform, ok := ecs.GetComponent(&_app.world.transforms, v)
-		// 	if ok {
-				
-		// 		transform.pos[0] += 1
-		// 		if transform.pos[0] >= 1920 {
-		// 			transform.pos[0] = 0
-		// 		}
-		// 		transform.rot += 0.01
-		// 	}
-		// }
-
 		if renderer.BeginFrame(&_app.renderer, viewport_size) {
-			systems.RenderWorld(&_app.world, &_app.renderer)
+			systems.RenderWorld(&_app.world, &_app.level ,&_app.renderer)
 			renderer.EndFrame(&_app.renderer)
 		}
 

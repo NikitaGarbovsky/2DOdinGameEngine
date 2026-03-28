@@ -1,9 +1,10 @@
 package systems
 
 import glm "core:math/linalg/glsl"
-import "../components"
 import omath "core:math"
-import renderdata "../renderdata"
+import "../components"
+import "../renderdata"
+import "../tilemap"
 
 @private
 RectOverlaps :: proc(_a, _b : renderdata.Rect2D) -> bool {
@@ -15,7 +16,7 @@ RectOverlaps :: proc(_a, _b : renderdata.Rect2D) -> bool {
 }
 
 @private
-SpriteWorldAABB :: proc(_transform : components.Transform, 
+EntitySpriteWorldAABB :: proc(_transform : components.Transform, 
     _sprite : components.Sprite) -> renderdata.Rect2D {
         
     width := _sprite.size.x
@@ -47,11 +48,38 @@ SpriteWorldAABB :: proc(_transform : components.Transform,
     }
 }
 
-IsSpriteVisible :: proc(_cam : ^renderdata.Camera2D, 
+@private
+IsEntitySpriteVisible :: proc(_cam : ^renderdata.Camera2D, 
     _transform : components.Transform, 
     _sprite : components.Sprite) -> bool
 {
     cam_rect := renderdata.CameraWorldRect(_cam)
-    sprite_rect := SpriteWorldAABB(_transform, _sprite)
+    sprite_rect := EntitySpriteWorldAABB(_transform, _sprite)
     return RectOverlaps(cam_rect, sprite_rect)
+}
+
+@private
+TileMapTileAABB :: proc(world_pos: [2]f32, def: ^tilemap.Tile_Definition) -> renderdata.Rect2D {
+    width  := def.size[0]
+    height := def.size[1]
+
+    min_x := world_pos[0] - def.origin[0] * width
+    min_y := world_pos[1] - def.origin[1] * height
+    max_x := min_x + width
+    max_y := min_y + height
+
+    return renderdata.Rect2D{
+        min = glm.vec2{min_x, min_y},
+        max = glm.vec2{max_x, max_y},
+    }
+}
+
+@private
+IsTileVisible :: proc(_cam: ^renderdata.Camera2D, 
+    _world_pos: [2]f32, 
+    _def: ^tilemap.Tile_Definition) -> bool 
+{
+    cam_rect  := renderdata.CameraWorldRect(_cam)
+    tile_rect := TileMapTileAABB(_world_pos, _def)
+    return RectOverlaps(cam_rect, tile_rect)
 }
