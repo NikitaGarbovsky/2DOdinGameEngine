@@ -8,30 +8,37 @@ import "../tilemap"
 
 // Renders all renderable entities & tiles on the tilemap
 RenderWorld :: proc(_world : ^ecs.EntityWorld, _level : ^tilemap.Level_State ,_renderer : ^renderer.Renderer) {
-    // Clear the previously batched items from last frame #TODO: maybe only clear items that have changed?
+    // 1. Clear the previously batched items from last frame #TODO: maybe only clear items that have changed?
     clear(&_renderer.sprite_batcher.items)    
 
-    // Extract the renderable tilemap & entity data
+    // 2. Extract the renderable tilemap & entity data
     ExtractTilemapRenderItems(&_level.tmap, &_level.defs, &_renderer.camera, &_renderer.sprite_batcher.items)
     ExtractEntityRenderItems(_world, _renderer ,&_renderer.sprite_batcher.items)
 
-    // Sort all render items to prepare for batching
+    // (EDITOR DEBUG) Adds the tilemap grid overlay #TODO: Turn this on and off in the editor
+    tilemap.ExtractTilemapGridOverlay(
+        _level,
+        &_renderer.camera,
+        &_renderer.sprite_batcher.items,
+    )
+    
+    // 3. Sort all render items to prepare for batching
     renderer.SortRenderItems(_renderer.sprite_batcher.items[:])
 
-    // Build the batches
+    // 4. Build the batches
     renderer.BuildBatches(
         _renderer.sprite_batcher.items[:],
         &_renderer.sprite_batcher.instances,
         &_renderer.sprite_batcher.batches,
     )
 
-    // Ready for rendering, upload batched data.
+    // 5. Ready for rendering, upload batched data.
     renderer.UploadInstancedata(_renderer, _renderer.sprite_batcher.instances[:])
 
-    // Begin Rendering the world
+    // 6. Begin Rendering the world
     if !renderer.BeginWorldPass(_renderer) do return
 
-    // Finally, submit the render batches to the gpu
+    // 7. Finally, submit the render batches to the gpu
     renderer.SubmitRenderBatches(_renderer, _renderer.sprite_batcher.batches[:])
 }
 

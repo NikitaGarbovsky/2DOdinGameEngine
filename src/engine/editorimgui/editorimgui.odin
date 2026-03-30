@@ -1,0 +1,37 @@
+package editorimgui
+
+import sdl "vendor:sdl3"
+import imgui "Dependencies:odin-imgui"
+import imgui_impl_sdl3 "Dependencies:odin-imgui/imgui_impl_sdl3"
+import imgui_impl_sdlgpu3 "Dependencies:odin-imgui/imgui_impl_sdlgpu3"
+
+/// 
+/// The editorimgui package manages the dear_imgui editor UI used to use the engine 
+/// part of the application. 
+///
+
+
+// Initializes editor imgui
+InitEditorImgui :: proc(_window : ^sdl.Window, 
+    _device : ^sdl.GPUDevice, 
+    _tformat : sdl.GPUTextureFormat, 
+    _sampleCount :sdl.GPUSampleCount) {
+
+    ctx := imgui.create_context()
+    imgui.set_current_context(ctx); assert(imgui.get_current_context() != nil)
+    imgui.CHECKVERSION() // Validates compatibility of this imgui version
+
+    ok1 := imgui_impl_sdl3.init_for_sdlgpu(_window); assert(ok1)
+
+    initinfo : imgui_impl_sdlgpu3.Init_Info = {_device, _tformat, _sampleCount}
+    ok2 := imgui_impl_sdlgpu3.init(&initinfo); assert(ok2)
+}
+
+// Used by app to check if editor gui has used input (editorgui has priority) 
+GetInputCapture :: proc() -> Input_Capture {
+    io := imgui.get_io()
+    return Input_Capture{
+        mouse = io.want_capture_mouse,
+        keyboard = io.want_capture_keyboard,
+    }
+}

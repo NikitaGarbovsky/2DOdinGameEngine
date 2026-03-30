@@ -2,6 +2,11 @@ package tilemap
 
 import "core:fmt"
 
+///
+/// Manages storing, mutating and registering tiles on the tilemap
+/// 
+
+
 InitTilemap :: proc(_tmap : ^Tilemap) {
     _tmap.tiles = make(map[Tile_Coord]Tile_Instance) 
 }
@@ -58,7 +63,6 @@ FindTileDefByKey :: proc(_lib : ^Tile_Def_Library, _key : string) -> (Tile_Def_I
     return id, ok
 }
 
-// #TODO: use when placing tiles in the editor
 PlaceTile :: proc(_tmap : ^Tilemap, _cell : Tile_Coord, _def_id : Tile_Def_ID) {
     _tmap.tiles[_cell] = Tile_Instance{def_id = _def_id}
 }

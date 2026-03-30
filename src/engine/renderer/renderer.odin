@@ -15,6 +15,9 @@ Init :: proc(_renderer : ^Renderer, _platform : ^platform.Platform, _vert_code, 
     _renderer.camera.zoom = 1.0
     _renderer.camera.viewport_size = glm.vec2{1920, 1080}
 
+    // Used by dear_imgui, set upon renderer initialization.
+    _renderer.swapchain_color_format = sdl.GetGPUSwapchainTextureFormat(_renderer.gpu, _renderer.window)
+
     _renderer.textures = make([dynamic]Texture_Resource, 0, 64)
     _renderer.samplers = make([dynamic]Sampler_Resource, 0, 8)
 
@@ -58,6 +61,8 @@ BeginWorldPass :: proc(_renderer : ^Renderer) -> bool {
     if _renderer.cmd_buf == nil do return false
     if _renderer.swapchain_tex == nil do return false
 
+    EndPass(_renderer) // End any existing passes, pre-emptive to stop crashes
+
     color_target := sdl.GPUColorTargetInfo{
         texture = _renderer.swapchain_tex,
         load_op = .CLEAR,
@@ -79,11 +84,31 @@ BeginWorldPass :: proc(_renderer : ^Renderer) -> bool {
     return true
 }
 
-EndFrame :: proc(_renderer : ^Renderer) {
-    if _renderer.render_pass != nil {
-        sdl.EndGPURenderPass(_renderer.render_pass)
-        _renderer.render_pass = nil
+// The editor ui pass, uses existing pipeline/command buffer.
+BeginEditorUIPass :: proc(_renderer : ^Renderer) -> ^sdl.GPURenderPass {
+    if _renderer.cmd_buf == nil do return nil
+    if _renderer.swapchain_tex == nil do return nil
+
+    EndPass(_renderer) // End any existing passes, pre-emptive to stop crashes
+
+    color_target := sdl.GPUColorTargetInfo{
+        texture = _renderer.swapchain_tex,
+        load_op = .LOAD,
+        store_op = .STORE
     }
+
+    pass := sdl.BeginGPURenderPass(_renderer.cmd_buf, &color_target, 1, nil)
+    if pass == nil {
+        log.errorf("BeginEditorUIPass failed: {}", sdl.GetError())
+        return nil
+    }
+
+    _renderer.render_pass = pass
+    return pass
+}
+
+EndFrame :: proc(_renderer : ^Renderer) {
+    EndPass(_renderer) // End any existing passes, final step with ending the final render pass that is running.
 
     if _renderer.cmd_buf != nil {
         ok := sdl.SubmitGPUCommandBuffer(_renderer.cmd_buf)
@@ -94,6 +119,14 @@ EndFrame :: proc(_renderer : ^Renderer) {
     }
 
     _renderer.swapchain_tex = nil
+}
+
+// Helper to end the currently loaded renderpass
+EndPass :: proc(_renderer : ^Renderer) {
+    if _renderer.render_pass != nil {
+        sdl.EndGPURenderPass(_renderer.render_pass) 
+        _renderer.render_pass = nil
+    }
 }
 
 Shutdown :: proc(_renderer : ^Renderer) {

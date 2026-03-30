@@ -2,6 +2,11 @@ package tilemap
 
 import "../renderdata"
 
+///
+/// Contains all the definitions of tilemap types
+///
+
+
 Tilemap :: struct {
     tiles : map[Tile_Coord]Tile_Instance,
 }
@@ -67,6 +72,13 @@ Tilemap_Editor_State :: struct {
 
     tile_w : f32,
     tile_h : f32,
+
+    show_grid : bool,
+    grid_sort_layer : i32,
+    grid_thickness : f32,
+    grid_color : [4]f32,
+    hover_color : [4]f32,
+    preview_color : [4]f32,
 }
 
 Edit_Mode :: enum u8 {

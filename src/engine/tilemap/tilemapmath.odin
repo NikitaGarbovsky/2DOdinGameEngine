@@ -2,8 +2,12 @@ package tilemap
 
 import "core:math"
 
-// ================ Helpers for conversions ================
+///
+/// Contains math converters for the tilemap coordinate positions & world positions
+///
 
+
+// ================ Helpers for conversions ================
 IsoGridCoordinateToWorldPos :: proc(_cell : Tile_Coord, _tile_w, _tile_h : f32) -> [2]f32 {
     half_w := _tile_w * 0.5
     half_h := _tile_h * 0.5

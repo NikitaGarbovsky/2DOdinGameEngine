@@ -7,12 +7,14 @@ import "../engine/ecs"
 import "../engine/renderer"
 import "../platform"
 import "../engine/tilemap"
+import "../engine/input"
 
 default_context : runtime.Context // #TODO: hook this up with sdl platform
 
 // Maintains state of the whole application
 AppState :: struct {
 	platform : platform.Platform,
+    input    : input.InputState,
 	world : ecs.EntityWorld,
 	renderer : renderer.Renderer, 
 	stats    : Frame_Stats,

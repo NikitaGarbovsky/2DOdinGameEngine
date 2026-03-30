@@ -14,6 +14,8 @@ Renderer :: struct {
     swapchain_tex : ^sdl.GPUTexture,
     render_pass : ^sdl.GPURenderPass,
 
+    swapchain_color_format : sdl.GPUTextureFormat, // Utllized by dear_imgui render
+
     sprite_pipeline : ^sdl.GPUGraphicsPipeline, 
 
     clear_color : [4]f32,

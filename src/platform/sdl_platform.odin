@@ -34,18 +34,6 @@ Init :: proc(_p : ^Platform) {
 	// }, nil)
 }
 
-ExecuteSDLEvents :: proc(_p : ^Platform) {
-
-    // Process events
-    ev: sdl.Event
-    for sdl.PollEvent(&ev) {
-        #partial switch ev.type {
-            case .QUIT:
-                _p.running = false
-        }
-    }
-}
-
 Shutdown :: proc(_p : ^Platform) {
     if _p.window != nil {
         sdl.DestroyWindow(_p.window)

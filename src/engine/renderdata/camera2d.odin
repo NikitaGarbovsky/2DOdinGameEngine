@@ -2,6 +2,11 @@ package renderdata
 
 import glm "core:math/linalg/glsl"
 
+///
+/// Bunch of helpers to manage 2D Camera functionality
+///
+
+
 CameraSetZoom :: proc(_cam : ^Camera2D, _zoom : f32) {
     _cam.zoom = max(0.05, _zoom)
 }
@@ -40,5 +45,20 @@ CameraWorldRect :: proc(_cam : ^Camera2D) -> Rect2D {
     return Rect2D{
         min = glm.vec2{_cam.position[0] - half_w, _cam.position[1] - half_h},
         max = glm.vec2{_cam.position[0] + half_w, _cam.position[1] + half_h},
+    }
+}
+
+// Converts 2D screenspace position to 2D world position
+ScreenToWorldPos :: proc(_cam : ^Camera2D, _screenPos : [2]f32) -> [2]f32 {
+
+    // Gets the center of the screen in pixels
+    half_x := _cam.viewport_size[0] * 0.5 // x
+    half_y := _cam.viewport_size[1] * 0.5 // y
+
+    // Take screen pos, shift it so center becomes 0, (relavite positioning)
+    // divide by zoom to account for it, add original camera position 
+    return {
+        _cam.position[0] + (_screenPos[0] - half_x) / _cam.zoom, // x
+        _cam.position[1] + (_screenPos[1] - half_y) / _cam.zoom, // y
     }
 }
