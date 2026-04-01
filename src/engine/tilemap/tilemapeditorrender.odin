@@ -219,7 +219,7 @@ AppendHoverPreviewItem :: proc(
     case .Paint:
         if !_level.editor.has_selected_tile do return
 
-        def, ok := GetTileDef(&_level.defs, _level.editor.selected_tile)
+        def, ok := GetTileDef(&_level.defsLibrary, _level.editor.selected_tile)
         if !ok do return
 
         pos := IsoGridCoordinateToWorldPos(_level.editor.hovered_cell, _level.editor.tile_w, _level.editor.tile_h)

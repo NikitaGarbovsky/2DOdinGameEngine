@@ -1,5 +1,7 @@
 package tilemap
 
+import sdl "vendor:sdl3"
+import "core:sync"
 import "../renderdata"
 
 ///
@@ -54,12 +56,33 @@ Collision_Kind :: enum u8 {
 }
 
 Level_State :: struct {
-    defs : Tile_Def_Library,
+    defsLibrary : Tile_Def_Library,
     tmap : Tilemap,
     editor : Tilemap_Editor_State,
 }
 
-// #TODO: use this when implementing the tilemap editor
+Tile_Palette_Group :: enum u8 {
+    Ground,
+    Walls,
+    Props,
+    Details,
+}
+
+Tile_Source_Rect_Px :: struct {
+    x, y : i32,
+    w, h : i32,
+}
+
+Palette_Item :: struct {
+    def_id : Tile_Def_ID,
+    label : string,
+
+    group : Tile_Palette_Group,
+
+    src_px : Tile_Source_Rect_Px,
+    preview_px : [2]f32,
+}
+
 Tilemap_Editor_State :: struct {
     enabled : bool,
     mode : Edit_Mode,
@@ -79,6 +102,33 @@ Tilemap_Editor_State :: struct {
     grid_color : [4]f32,
     hover_color : [4]f32,
     preview_color : [4]f32,
+
+    // Palette UI
+    palette_open : bool,
+    selected_group : Tile_Palette_Group,
+    palette_items : [dynamic]Palette_Item,
+    palette_texture : renderdata.Texture_Handle,
+
+    // For ImGui 1.91.9 SDLGPU3 backend, used by the tielmap editor
+    palette_texture_binding : sdl.GPUTextureSamplerBinding,
+    palette_texture_imgui_id : rawptr,
+
+    palette_thumb_size : f32,
+    palette_window_size : [2]f32,
+
+    origin_edit_value : [2]f32,
+    origin_edit_loaded : bool,
+    origin_edit_loaded_for : Tile_Def_ID,
+
+    tileset_meta_path : string,
+
+    current_level_path : Path_Buffer,
+    pending_load_path : Path_Buffer,
+    has_pending_load_path : bool,
+    dialog_mutex : sync.Mutex,
+
+    pending_save_path : Path_Buffer,
+    has_pending_save_path : bool,
 }
 
 Edit_Mode :: enum u8 {
@@ -86,3 +136,20 @@ Edit_Mode :: enum u8 {
     Delete,
 }
 
+MAX_LEVEL_PATH_BYTES :: 1024
+
+Path_Buffer :: struct {
+    len : int,
+    buf : [MAX_LEVEL_PATH_BYTES]u8,
+}
+
+Hardcoded_Palette_Tile :: struct {
+    key : string,
+    label : string,
+    group : Tile_Palette_Group,
+
+    src_px : Tile_Source_Rect_Px,
+
+    world_size : [2]f32,
+    origin : [2]f32,
+}

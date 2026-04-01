@@ -1,6 +1,7 @@
 package tilemap
 
 import "../renderdata"
+import imgui "Dependencies:odin-imgui"
 
 ///
 /// Manages the editing functionality of the tilemap.
@@ -20,13 +21,321 @@ SelectTileForPainting :: proc(_level : ^Level_State, _def_id : Tile_Def_ID) {
     _level.editor.selected_tile = _def_id
     _level.editor.has_selected_tile = true
     _level.editor.mode = .Paint
+
+    // Forces a resync to occur to the saved file that holds the origin 
+    _level.editor.origin_edit_loaded = false
+    _level.editor.origin_edit_loaded_for = Tile_Def_ID(0)
 }
 
-// Per frame update (hover ghost pos, delete outline pos, tilemap painting interaction pos)
+PaletteGroupLabel :: proc(_group : Tile_Palette_Group) -> cstring {
+    switch _group {
+    case .Ground:  return "Ground"
+    case .Walls:   return "Walls"
+    case .Props:   return "Props"
+    case .Details: return "Details"
+    }
+    return "Unknown"
+}
+
+SyncSelectedTileOriginEditor :: proc(_level : ^Level_State) {
+    if !_level.editor.has_selected_tile do return
+
+    if !_level.editor.origin_edit_loaded || _level.editor.origin_edit_loaded_for != _level.editor.selected_tile {
+        def, ok := GetTileDef(&_level.defsLibrary, _level.editor.selected_tile)
+        if !ok do return
+
+        _level.editor.origin_edit_value = def.origin
+        _level.editor.origin_edit_loaded = true
+        _level.editor.origin_edit_loaded_for = _level.editor.selected_tile
+    }
+}
+
+CommitSelectedTileOrigin :: proc(_level : ^Level_State, _origin : [2]f32) {
+    if !_level.editor.has_selected_tile do return
+
+    def, ok := GetTileDef(&_level.defsLibrary, _level.editor.selected_tile)
+    if !ok do return
+
+    def.origin = _origin
+    _level.editor.origin_edit_value = _origin
+}
+
+DrawEditorUI :: proc(_level : ^Level_State) {
+    if !_level.editor.enabled do return
+
+    DrawEditorToolbar(_level)
+    DrawTilePaletteWindow(_level)
+}
+
+DrawEditorToolbar :: proc(_level : ^Level_State) {
+    vp := imgui.get_main_viewport()
+    if vp == nil do return
+
+    win_size := imgui.Vec2{280, 36}
+    win_pos := imgui.Vec2{
+        x = vp.work_pos.x + vp.work_size.x - win_size.x - 12.0,
+        y = vp.work_pos.y + vp.work_size.y - win_size.y - 12.0,
+    }
+
+    imgui.set_next_window_pos(win_pos, .Always)
+    imgui.set_next_window_size(win_size, .Always)
+
+    flags: imgui.Window_Flags = {
+        .No_Resize,
+        .No_Move,
+        .No_Collapse,
+        .No_Saved_Settings,
+        .No_Title_Bar,
+    }
+
+    if imgui.begin("##TilemapToolbar", nil, flags) {
+        if imgui.button("Save Level") {
+            _ = SaveCurrentLevelOrPromptSaveAs(_level)
+        }
+        imgui.same_line()
+        if imgui.button("Load Level") {
+            RequestOpenLevelDialog(_level)
+        }
+        imgui.same_line()
+
+        palette_button_selected := _level.editor.palette_open
+
+        if palette_button_selected {
+            imgui.push_style_color_vec4(.Button, imgui.Vec4{0.35, 0.30, 0.50, 1.0})
+            imgui.push_style_color_vec4(.Button_Hovered, imgui.Vec4{0.45, 0.40, 0.60, 1.0})
+            imgui.push_style_color_vec4(.Button_Active, imgui.Vec4{0.30, 0.25, 0.45, 1.0})
+        }
+
+        if imgui.button("Tile Palette") {
+            _level.editor.palette_open = !_level.editor.palette_open
+        }
+
+        if palette_button_selected {
+            imgui.pop_style_color(3)
+        }
+    }
+    imgui.end()
+}
+
+DrawSelectedTileInspector :: proc(_level : ^Level_State) {
+    imgui.separator()
+    imgui.text_unformatted("Selected Tile:")
+
+    if !_level.editor.has_selected_tile {
+        imgui.text_unformatted("No tile selected.")
+        return
+    }
+
+    def, ok := GetTileDef(&_level.defsLibrary, _level.editor.selected_tile)
+    if !ok {
+        imgui.text_unformatted("Selected tile missing.")
+        return
+    }
+
+    SyncSelectedTileOriginEditor(_level)
+
+    imgui.text("%.*s", len(def.key), raw_data(def.key))
+
+    imgui.push_item_width(-1)
+
+    changed := false
+
+    // Slider like drag control
+    imgui.text_unformatted("Origin Slider")
+    if imgui.drag_float2(
+        "##OriginDrag",
+        &_level.editor.origin_edit_value,
+        0.01,
+        -1.0,
+        1.0,
+        "%.2f",
+    ) {
+        changed = true
+    }
+
+    // Exact manual entry
+    imgui.text_unformatted("Origin Input")
+    if imgui.input_float2(
+        "##OriginInput",
+        &_level.editor.origin_edit_value,
+        "%.3f",
+    ) {
+        changed = true
+    }
+
+    imgui.pop_item_width()
+
+    if changed {
+        CommitSelectedTileOrigin(_level, _level.editor.origin_edit_value)
+        SaveTileOriginOverrides(_level)
+    }
+
+    //imgui.text("Current: %.3f, %.3f", def.origin[0], def.origin[1])
+}
+
+DrawTilePaletteWindow :: proc(_level : ^Level_State) {
+    if !_level.editor.palette_open do return
+
+    vp := imgui.get_main_viewport()
+    if vp == nil do return
+
+    win_size := imgui.Vec2{
+        _level.editor.palette_window_size[0],
+        _level.editor.palette_window_size[1],
+    }
+
+    win_pos := imgui.Vec2{
+        x = vp.work_pos.x + vp.work_size.x - win_size.x - 12.0,
+        y = vp.work_pos.y + vp.work_size.y - win_size.y - 76.0,
+    }
+
+    imgui.set_next_window_pos(win_pos, .Always)
+    imgui.set_next_window_size(win_size, .Always)
+
+    open := _level.editor.palette_open
+
+    flags: imgui.Window_Flags = {
+        .No_Collapse,
+        .No_Saved_Settings,
+    }
+
+    if imgui.begin("Tile Palette", &open, flags) {
+        _level.editor.palette_open = open
+
+        imgui.begin_child("##palette_tiles", imgui.Vec2{win_size.x - 200.0, 0.0}, {.Borders}, {})
+        DrawTilePaletteGrid(_level)
+        imgui.end_child()
+
+        imgui.same_line()
+
+        imgui.begin_child("##palette_groups", imgui.Vec2{0.0, 0.0}, {.Borders}, {})
+        DrawPaletteGroupButtons(_level)
+        DrawSelectedTileInspector(_level)
+        imgui.end_child()
+    } else {
+        _level.editor.palette_open = open
+    }
+
+    imgui.end()
+}
+
+DrawPaletteGroupButtons :: proc(_level : ^Level_State) {
+    groups := []Tile_Palette_Group{.Ground, .Walls, .Props, .Details}
+
+    for i := 0; i < len(groups); i += 1 {
+        group := groups[i]
+        selected := _level.editor.selected_group == group
+
+        if selected {
+            imgui.push_style_color_vec4(.Button, imgui.Vec4{0.35, 0.30, 0.50, 1.0})
+            imgui.push_style_color_vec4(.Button_Hovered, imgui.Vec4{0.45, 0.40, 0.60, 1.0})
+            imgui.push_style_color_vec4(.Button_Active, imgui.Vec4{0.30, 0.25, 0.45, 1.0})
+        }
+
+        if imgui.button(PaletteGroupLabel(group)) {
+            _level.editor.selected_group = group
+        }
+
+        if selected {
+            imgui.pop_style_color(3)
+        }
+    }
+}
+
+DrawTilePaletteGrid :: proc(_level : ^Level_State) {
+    thumb_size := _level.editor.palette_thumb_size
+    spacing: f32 = 8.0
+
+    avail := imgui.get_content_region_avail()
+    cols := int((avail.x + spacing) / (thumb_size + spacing))
+    if cols < 1 do cols = 1
+
+    visible_index := 0
+
+    for i := 0; i < len(_level.editor.palette_items); i += 1 {
+        item := _level.editor.palette_items[i]
+        if item.group != _level.editor.selected_group do continue
+
+        def, ok := GetTileDef(&_level.defsLibrary, item.def_id)
+        if !ok do continue
+
+        if visible_index > 0 && visible_index % cols != 0 {
+            imgui.same_line()
+        }
+
+        DrawPaletteTileButton(_level, item, def)
+        visible_index += 1
+    }
+
+    if visible_index == 0 {
+        imgui.text_unformatted("No tiles in this group yet.")
+    }
+}
+
+DrawPaletteTileButton :: proc(
+    _level : ^Level_State,
+    _item  : Palette_Item,
+    _def   : ^Tile_Definition,
+) {
+    if _level.editor.palette_texture_imgui_id == nil do return
+
+    tex_id := imgui.Texture_ID(uintptr(_level.editor.palette_texture_imgui_id))
+
+    draw_w := _item.preview_px[0]
+    draw_h := _item.preview_px[1]
+
+    max_dim := draw_w
+    if draw_h > max_dim do max_dim = draw_h
+
+    if max_dim > _level.editor.palette_thumb_size && max_dim > 0 {
+        scale := _level.editor.palette_thumb_size / max_dim
+        draw_w *= scale
+        draw_h *= scale
+    }
+
+    uv0 := imgui.Vec2{_def.uv_min[0], _def.uv_min[1]}
+    uv1 := imgui.Vec2{_def.uv_max[0], _def.uv_max[1]}
+
+    selected := _level.editor.has_selected_tile && _level.editor.selected_tile == _item.def_id
+
+    if selected {
+        imgui.push_style_color_vec4(.Button,         imgui.Vec4{0.35, 0.30, 0.50, 1.0})
+        imgui.push_style_color_vec4(.Button_Hovered, imgui.Vec4{0.45, 0.40, 0.60, 1.0})
+        imgui.push_style_color_vec4(.Button_Active,  imgui.Vec4{0.30, 0.25, 0.45, 1.0})
+    }
+
+    imgui.push_id_int(i32(u32(_item.def_id)))
+    clicked := imgui.image_button(
+        "##palette_tile",
+        tex_id,
+        imgui.Vec2{draw_w, draw_h},
+        uv0,
+        uv1,
+        imgui.Vec4{0, 0, 0, 0},
+        imgui.Vec4{1, 1, 1, 1},
+    )
+    imgui.pop_id()
+
+    if selected {
+        imgui.pop_style_color(3)
+    }
+
+    if clicked {
+        SelectTileForPainting(_level, _item.def_id)
+    }
+
+    if imgui.is_item_hovered() {
+        if imgui.begin_tooltip() {
+            imgui.text("%.*s", len(_item.label), raw_data(_item.label))
+            imgui.end_tooltip()
+        }
+    }
+}
+
 UpdateEditor :: proc(
-    _level: ^Level_State,
-    _cam: ^renderdata.Camera2D,
-    _input: Tilemap_Editor_Input,
+    _level : ^Level_State,
+    _cam   : ^renderdata.Camera2D,
+    _input : Tilemap_Editor_Input,
 ) {
     if !_level.editor.enabled {
         _level.editor.has_hovered_cell = false

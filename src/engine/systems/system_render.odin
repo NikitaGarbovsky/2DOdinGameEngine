@@ -6,21 +6,31 @@ import "core:log"
 import renderdata "../renderdata"
 import "../tilemap"
 
+/// A system is a smaller alotment of functionality that is run by main application within it's main loop.
+
+///
+/// This system runs the main rendering of the renderables. Primarily the batching, sorting & rendering of them.
+///
+
+
+
 // Renders all renderable entities & tiles on the tilemap
 RenderWorld :: proc(_world : ^ecs.EntityWorld, _level : ^tilemap.Level_State ,_renderer : ^renderer.Renderer) {
     // 1. Clear the previously batched items from last frame #TODO: maybe only clear items that have changed?
     clear(&_renderer.sprite_batcher.items)    
 
     // 2. Extract the renderable tilemap & entity data
-    ExtractTilemapRenderItems(&_level.tmap, &_level.defs, &_renderer.camera, &_renderer.sprite_batcher.items)
+    ExtractTilemapRenderItems(&_level.tmap, &_level.defsLibrary, &_renderer.camera, 
+        _level.editor.tile_w,_level.editor.tile_h, &_renderer.sprite_batcher.items)
     ExtractEntityRenderItems(_world, _renderer ,&_renderer.sprite_batcher.items)
 
-    // (EDITOR DEBUG) Adds the tilemap grid overlay #TODO: Turn this on and off in the editor
+    if _level.editor.palette_open {
+    // (EDITOR DEBUG) Adds the tilemap grid overlay
     tilemap.ExtractTilemapGridOverlay(
         _level,
         &_renderer.camera,
         &_renderer.sprite_batcher.items,
-    )
+    )}
     
     // 3. Sort all render items to prepare for batching
     renderer.SortRenderItems(_renderer.sprite_batcher.items[:])
@@ -102,13 +112,15 @@ ExtractTilemapRenderItems :: proc(
     _tmap: ^tilemap.Tilemap,
     _defs: ^tilemap.Tile_Def_Library,
     _cam: ^renderdata.Camera2D,
+    _cell_w : f32,
+    _cell_h : f32,
     _out_items: ^[dynamic]renderdata.Render_Item,
 ) {
     for cell, placed in _tmap.tiles {
         tiledef, ok := tilemap.GetTileDef(_defs, placed.def_id)
         if !ok do continue
 
-        world_pos := tilemap.IsoGridCoordinateToWorldPos(cell, tiledef.size[0], tiledef.size[1])
+        world_pos := tilemap.IsoGridCoordinateToWorldPos(cell, _cell_w, _cell_h)
 
         if !IsTileVisible(_cam, world_pos, tiledef) do continue
 

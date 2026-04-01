@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "tile_layers": [
+    {
+      "name": "main",
+      "tiles": [
+        {
+          "x": 31,
+          "y": 2,
+          "tile": "wall_rock_09"
+        },
+        {
+          "x": 32,
+          "y": 2,
+          "tile": "wall_rock_06"
+        },
+        {
+          "x": 33,
+          "y": 2,
+          "tile": "wall_rock_06"
+        },
+        {
+          "x": 31,
+          "y": 3,
+          "tile": "wall_rock_05"
+        },
+        {
+          "x": 32,
+          "y": 3,
+          "tile": "ground_01"
+        },
+        {
+          "x": 33,
+          "y": 3,
+          "tile": "ground_01"
+        },
+        {
+          "x": 31,
+          "y": 4,
+          "tile": "wall_rock_05"
+        },
+        {
+          "x": 33,
+          "y": 4,
+          "tile": "ground_01"
+        },
+        {
+          "x": 28,
+          "y": 5,
+          "tile": "ground_01"
+        },
+        {
+          "x": 31,
+          "y": 5,
+          "tile": "wall_rock_05"
+        },
+        {
+          "x": 31,
+          "y": 6,
+          "tile": "wall_rock_05"
+        }
+      ]
+    }
+  ]
+}
