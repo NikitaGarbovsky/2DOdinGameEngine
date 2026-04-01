@@ -155,7 +155,7 @@ ExtractTilemapRenderItems :: proc(
                         tiledef.size,
                         tiledef.origin,
                         0,
-                        0, // #TODO might want to re-add sorting here for different tile layers, temp removed for now
+                        f32(tiledef.layer), 
                     ),
                     uv_min = tiledef.uv_min,
                     uv_max = tiledef.uv_max,
