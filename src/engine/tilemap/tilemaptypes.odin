@@ -5,7 +5,7 @@ import "core:sync"
 import "../renderdata"
 
 ///
-/// Contains all the definitions of tilemap types
+/// Contains all the object definitions of tilemap types
 ///
 
 
@@ -55,9 +55,14 @@ Collision_Kind :: enum u8 {
     Polygon,
 }
 
+TILEMAP_LAYER_COUNT :: 3
+Tilemap_Layer :: enum u8 {
+    Ground, Walls, Decoration
+}
+
 Level_State :: struct {
     defsLibrary : Tile_Def_Library,
-    tmap : Tilemap,
+    tmaps : [TILEMAP_LAYER_COUNT]Tilemap,
     editor : Tilemap_Editor_State,
 }
 
@@ -129,6 +134,8 @@ Tilemap_Editor_State :: struct {
 
     pending_save_path : Path_Buffer,
     has_pending_save_path : bool,
+
+    selected_layer : Tilemap_Layer,
 }
 
 Edit_Mode :: enum u8 {

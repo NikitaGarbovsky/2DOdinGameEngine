@@ -64,8 +64,14 @@ Run :: proc(_app : ^AppState) {
 				ui_capture := editorimgui.GetInputCapture()
 				editor_input := tilemap.Tilemap_Editor_Input{
 					mouse_screen = {_app.input.mouse_x, _app.input.mouse_y},
+					mouse_delta = {_app.input.mouse_dx, _app.input.mouse_dy},
+
 					left_clicked = _app.input.left_pressed && !ui_capture.mouse,
-					delete_pressed = _app.input.delete_pressed && !ui_capture.keyboard}
+					right_down = _app.input.right_down,
+					delete_pressed = _app.input.delete_pressed && !ui_capture.keyboard,
+					space_down = _app.input.space_down,
+					mouse_captured = ui_capture.mouse,
+    				keyboard_captured = ui_capture.keyboard,}
 
 				// Do tilemap frame-dependant editor updates 
 				tilemap.UpdateEditor(&_app.level, &_app.renderer.camera, editor_input)

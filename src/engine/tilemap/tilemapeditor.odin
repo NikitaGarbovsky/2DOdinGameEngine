@@ -11,8 +11,16 @@ import imgui "Dependencies:odin-imgui"
 // Object containing editor tilemap input state
 Tilemap_Editor_Input :: struct {
     mouse_screen : [2]f32,
-    left_clicked : bool, 
-    delete_pressed : bool,
+    mouse_delta  : [2]f32,
+
+    left_clicked   : bool,
+    right_down     : bool,
+
+    delete_pressed   : bool,
+    space_down       : bool,
+
+    mouse_captured    : bool,
+    keyboard_captured : bool,
 }
 
 
@@ -67,11 +75,29 @@ DrawEditorUI :: proc(_level : ^Level_State) {
     DrawTilePaletteWindow(_level)
 }
 
+DrawLayerButton :: proc(_level : ^Level_State, _layer : Tilemap_Layer) {
+    selected := _level.editor.selected_layer == _layer
+
+    if selected {
+        imgui.push_style_color_vec4(.Button,         imgui.Vec4{0.35, 0.30, 0.50, 1.0})
+        imgui.push_style_color_vec4(.Button_Hovered, imgui.Vec4{0.45, 0.40, 0.60, 1.0})
+        imgui.push_style_color_vec4(.Button_Active,  imgui.Vec4{0.30, 0.25, 0.45, 1.0})
+    }
+
+    if imgui.button(TilemapLayerLabel(_layer)) {
+        _level.editor.selected_layer = _layer
+    }
+
+    if selected {
+        imgui.pop_style_color(3)
+    }
+}
+
 DrawEditorToolbar :: proc(_level : ^Level_State) {
     vp := imgui.get_main_viewport()
     if vp == nil do return
 
-    win_size := imgui.Vec2{280, 36}
+    win_size := imgui.Vec2{560, 64}
     win_pos := imgui.Vec2{
         x = vp.work_pos.x + vp.work_size.x - win_size.x - 12.0,
         y = vp.work_pos.y + vp.work_size.y - win_size.y - 12.0,
@@ -98,12 +124,22 @@ DrawEditorToolbar :: proc(_level : ^Level_State) {
         }
         imgui.same_line()
 
-        palette_button_selected := _level.editor.palette_open
+        imgui.separator()
+        imgui.text_unformatted("Active Layer:")
+        imgui.same_line()
+        DrawLayerButton(_level, .Ground)
+        imgui.same_line()
+        DrawLayerButton(_level, .Walls)
+        imgui.same_line()
+        DrawLayerButton(_level, .Decoration)
 
+        imgui.same_line()
+
+        palette_button_selected := _level.editor.palette_open
         if palette_button_selected {
-            imgui.push_style_color_vec4(.Button, imgui.Vec4{0.35, 0.30, 0.50, 1.0})
+            imgui.push_style_color_vec4(.Button,         imgui.Vec4{0.35, 0.30, 0.50, 1.0})
             imgui.push_style_color_vec4(.Button_Hovered, imgui.Vec4{0.45, 0.40, 0.60, 1.0})
-            imgui.push_style_color_vec4(.Button_Active, imgui.Vec4{0.30, 0.25, 0.45, 1.0})
+            imgui.push_style_color_vec4(.Button_Active,  imgui.Vec4{0.30, 0.25, 0.45, 1.0})
         }
 
         if imgui.button("Tile Palette") {
@@ -342,13 +378,7 @@ UpdateEditor :: proc(
         return
     }
 
-    world_pos := renderdata.ScreenToWorldPos(_cam, _input.mouse_screen)
-    hovered := WorldToIsoGridCoordinate(world_pos, _level.editor.tile_w, _level.editor.tile_h)
-
-    _level.editor.hovered_cell = hovered
-    _level.editor.has_hovered_cell = true
-
-    if _input.delete_pressed {
+    if !_input.keyboard_captured && _input.delete_pressed {
         if _level.editor.mode == .Delete {
             _level.editor.mode = .Paint
         } else {
@@ -356,15 +386,64 @@ UpdateEditor :: proc(
         }
     }
 
+    if UpdateEditorCameraPan(_cam, _input) {
+        _level.editor.has_hovered_cell = false
+        return
+    }
+
+    if _input.mouse_captured {
+        _level.editor.has_hovered_cell = false
+        return
+    }
+
+    world_pos := renderdata.ScreenToWorldPos(_cam, _input.mouse_screen)
+    hovered := WorldToIsoGridCoordinate(world_pos, _level.editor.tile_w, _level.editor.tile_h)
+
+    _level.editor.hovered_cell = hovered
+    _level.editor.has_hovered_cell = true
+
+    active_tmap := GetTilemapForLayer(_level, _level.editor.selected_layer)
+    
     if _input.left_clicked {
         switch _level.editor.mode {
         case .Paint:
             if _level.editor.has_selected_tile {
-                PlaceTile(&_level.tmap, hovered, _level.editor.selected_tile)
+                PlaceTile(active_tmap, hovered, _level.editor.selected_tile)
             }
 
         case .Delete:
-            RemoveTile(&_level.tmap, hovered)
+            RemoveTile(active_tmap, hovered)
         }
     }
+}
+
+UpdateEditorCameraPan :: proc(
+    _cam   : ^renderdata.Camera2D,
+    _input : Tilemap_Editor_Input,
+) -> bool {
+    if !_input.space_down do return false
+    if !_input.right_down do return false
+    if _input.mouse_captured do return false
+
+    if _input.mouse_delta[0] == 0 && _input.mouse_delta[1] == 0 {
+        return true
+    }
+
+    prev_mouse := [2]f32{
+        _input.mouse_screen[0] - _input.mouse_delta[0],
+        _input.mouse_screen[1] - _input.mouse_delta[1],
+    }
+
+    world_prev := renderdata.ScreenToWorldPos(_cam, prev_mouse)
+    world_curr := renderdata.ScreenToWorldPos(_cam, _input.mouse_screen)
+
+    delta := [2]f32{
+        world_prev[0] - world_curr[0],
+        world_prev[1] - world_curr[1],
+    }
+
+    _cam.position[0] += delta[0]
+    _cam.position[1] += delta[1]
+
+    return true
 }

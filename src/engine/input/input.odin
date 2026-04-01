@@ -10,9 +10,12 @@ import sdl "vendor:sdl3"
 ResetInputState :: proc(_inputS: ^InputState) {
     _inputS.left_pressed = false
     _inputS.delete_pressed = false
+
+    _inputS.mouse_dx = 0
+    _inputS.mouse_dy = 0
 }
 
-// Defines sdl input definitions, processes any input per frame.
+// Defines sdl input definitions, processes any input per update loop.
 ProcessSDLEvents :: proc(
     _input: ^InputState,
     _running: ^bool,
@@ -35,6 +38,8 @@ ProcessSDLEvents :: proc(
         case .MOUSE_MOTION:
             _input.mouse_x = f32(ev.motion.x)
             _input.mouse_y = f32(ev.motion.y)
+            _input.mouse_dx += f32(ev.motion.xrel)
+            _input.mouse_dy += f32(ev.motion.yrel)
 
         case .MOUSE_BUTTON_DOWN:
             if ev.button.button == sdl.BUTTON_LEFT {
@@ -44,9 +49,16 @@ ProcessSDLEvents :: proc(
                 _input.left_down = true
             }
 
+            if ev.button.button == sdl.BUTTON_RIGHT {
+                _input.right_down = true
+            }
+
         case .MOUSE_BUTTON_UP:
             if ev.button.button == sdl.BUTTON_LEFT {
                 _input.left_down = false
+            }
+            if ev.button.button == sdl.BUTTON_RIGHT {
+                _input.right_down = false
             }
 
         case .KEY_DOWN:
@@ -55,11 +67,19 @@ ProcessSDLEvents :: proc(
                     _input.delete_pressed = true
                     _input.delete_down = true
                 }
+
+                if ev.key.scancode == sdl.GetScancodeFromName("Space") {
+                    _input.space_down = true
+                }
             }
 
         case .KEY_UP:
             if ev.key.scancode == sdl.GetScancodeFromName("Delete") {
                 _input.delete_down = false
+            }
+
+            if ev.key.scancode == sdl.GetScancodeFromName("Space") {
+                _input.space_down = false
             }
 
         case .WINDOW_RESIZED:

@@ -11,7 +11,11 @@ import sdl "vendor:sdl3"
 // Initializes everthing todo with the level/tilemap
 InitLevelState :: proc(_level : ^Level_State, _tile_w, _tile_h : f32) {
     InitTileDefLibrary(&_level.defsLibrary)
-    InitTilemap(&_level.tmap)
+    for i := 0; i < TILEMAP_LAYER_COUNT; i += 1 {
+        InitTilemap(&_level.tmaps[i])
+    }
+
+    _level.editor.selected_layer = .Ground
 
     _level.editor.enabled = true
     _level.editor.mode = .Paint
@@ -51,7 +55,9 @@ InitLevelState :: proc(_level : ^Level_State, _tile_w, _tile_h : f32) {
 }
 
 DestroyLevelState :: proc(_level : ^Level_State) {
-    DestroyTilemap(&_level.tmap)
+    for i := 0; i < TILEMAP_LAYER_COUNT; i += 1 {
+        DestroyTilemap(&_level.tmaps[i])
+    }
     DestroyTileDefLibrary(&_level.defsLibrary)
     
     if cap(_level.editor.palette_items) > 0 {

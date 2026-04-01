@@ -20,8 +20,8 @@ RenderWorld :: proc(_world : ^ecs.EntityWorld, _level : ^tilemap.Level_State ,_r
     clear(&_renderer.sprite_batcher.items)    
 
     // 2. Extract the renderable tilemap & entity data
-    ExtractTilemapRenderItems(&_level.tmap, &_level.defsLibrary, &_renderer.camera, 
-        _level.editor.tile_w,_level.editor.tile_h, &_renderer.sprite_batcher.items)
+    ExtractTilemapRenderItems(_level, &_renderer.camera, _level.editor.tile_w, 
+        _level.editor.tile_h, &_renderer.sprite_batcher.items)
     ExtractEntityRenderItems(_world, _renderer ,&_renderer.sprite_batcher.items)
 
     if _level.editor.palette_open {
@@ -106,52 +106,64 @@ ExtractEntityRenderItems :: proc(
 }
 
 
-// Gets all the tiles from the tilemap, convert tilemap coordinate to world pos, 
+// Gets all the tiles from the tilemap & their layers, convert tilemap coordinate to world pos, 
 // checks if their visible, if they are, create a new render item and append it to the render list for this frame.
 ExtractTilemapRenderItems :: proc(
-    _tmap: ^tilemap.Tilemap,
-    _defs: ^tilemap.Tile_Def_Library,
+    _level : ^tilemap.Level_State,
     _cam: ^renderdata.Camera2D,
     _cell_w : f32,
     _cell_h : f32,
     _out_items: ^[dynamic]renderdata.Render_Item,
 ) {
-    for cell, placed in _tmap.tiles {
-        tiledef, ok := tilemap.GetTileDef(_defs, placed.def_id)
-        if !ok do continue
+    tilemapLayers := [3]tilemap.Tilemap_Layer{
+        .Ground,
+        .Walls,
+        .Decoration,
+    }
 
-        world_pos := tilemap.IsoGridCoordinateToWorldPos(cell, _cell_w, _cell_h)
+    for layer in tilemapLayers {
+        tmap := tilemap.GetTilemapForLayer(_level, layer)
+        layer_sort_bias := tilemap.TilemapLayerSortBias(layer)
 
-        if !IsTileVisible(_cam, world_pos, tiledef) do continue
+        for cell, placed in tmap.tiles {
+            tiledef, ok := tilemap.GetTileDef(&_level.defsLibrary, placed.def_id)
+            if !ok do continue
 
-        item := renderdata.Render_Item{
-            pass = .World,
-            sort_layer = tiledef.layer,
+            world_pos := tilemap.IsoGridCoordinateToWorldPos(cell, _cell_w, _cell_h)
 
-            // Sorting by world y 
-            y_sort = world_pos[1],
+            if !IsTileVisible(_cam, world_pos, tiledef) do continue
 
-            material = renderdata.Material_Key{
-                pipeline = .Sprite,
-                texture  = tiledef.texture,
-                sampler  = tiledef.sampler,
-                blend    = .Alpha,
-            },
+            sort_layer := layer_sort_bias + tiledef.layer
 
-            instance = renderdata.Sprite_Instance{
-                model = renderdata.MakeSpriteModelMatrix(
-                    world_pos,
-                    tiledef.size,
-                    tiledef.origin,
-                    0,
-                    f32(tiledef.layer),
-                ),
-                uv_min = tiledef.uv_min,
-                uv_max = tiledef.uv_max,
-                color  = {1, 1, 1, 1},
-            },
+            item := renderdata.Render_Item{
+                pass = .World,
+                sort_layer = sort_layer,
+
+                // Sorting by world y
+                y_sort = world_pos[1],
+
+                material = renderdata.Material_Key{
+                    pipeline = .Sprite,
+                    texture  = tiledef.texture,
+                    sampler  = tiledef.sampler,
+                    blend    = .Alpha,
+                },
+
+                instance = renderdata.Sprite_Instance{
+                    model = renderdata.MakeSpriteModelMatrix(
+                        world_pos,
+                        tiledef.size,
+                        tiledef.origin,
+                        0,
+                        0, // #TODO might want to re-add sorting here for different tile layers, temp removed for now
+                    ),
+                    uv_min = tiledef.uv_min,
+                    uv_max = tiledef.uv_max,
+                    color  = {1, 1, 1, 1},
+                },
+            }
+
+            append(_out_items, item)
         }
-
-        append(_out_items, item)
     }
 }

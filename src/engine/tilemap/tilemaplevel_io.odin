@@ -31,10 +31,11 @@ PathBuffer_String :: proc(_buf : ^Path_Buffer) -> string {
 }
 
 // Takes in the level state and records all the level data into the saveable .json format.
-BuildTileLayerData :: proc(_level : ^Level_State, _layer_name := "ground") -> leveldata.Tile_Layer_Data {
-    placements := make([dynamic]leveldata.Tile_Placement_Data, 0, len(_level.tmap.tiles))
+BuildTileLayerData :: proc(_level : ^Level_State, _layer : Tilemap_Layer) -> leveldata.Tile_Layer_Data {
+    tmap := GetTilemapForLayer(_level, _layer)
+    placements := make([dynamic]leveldata.Tile_Placement_Data, 0, len(tmap.tiles))
 
-    for cell, inst in _level.tmap.tiles {
+    for cell, inst in tmap.tiles {
         def, ok := GetTileDef(&_level.defsLibrary, inst.def_id)
         if !ok do continue
 
@@ -51,18 +52,19 @@ BuildTileLayerData :: proc(_level : ^Level_State, _layer_name := "ground") -> le
     })
 
     return leveldata.Tile_Layer_Data{
-        name  = _layer_name,
+        name  = TilemapLayerName(_layer),
         tiles = placements,
     }
 }
 
-ApplyTileLayerData :: proc(_level : ^Level_State, _layer : leveldata.Tile_Layer_Data) -> bool {
-    ClearTilemap(&_level.tmap)
+ApplyTileLayerData :: proc(_level : ^Level_State, _layer : Tilemap_Layer, _layer_data : leveldata.Tile_Layer_Data) -> bool {
+    tmap := GetTilemapForLayer(_level, _layer)
+    ClearTilemap(tmap)
 
     missing_defs := 0
 
-    for i := 0; i < len(_layer.tiles); i += 1 {
-        t := _layer.tiles[i]
+    for i := 0; i < len(_layer_data.tiles); i += 1 {
+        t := _layer_data.tiles[i]
 
         def_id, ok := FindTileDefByKey(&_level.defsLibrary, t.tile)
         if !ok {
@@ -71,7 +73,7 @@ ApplyTileLayerData :: proc(_level : ^Level_State, _layer : leveldata.Tile_Layer_
             continue
         }
 
-        PlaceTile(&_level.tmap, Tile_Coord{x = t.x, y = t.y}, def_id)
+        PlaceTile(tmap, Tile_Coord{x = t.x, y = t.y}, def_id)
     }
 
     if missing_defs > 0 {
@@ -89,11 +91,13 @@ SaveCurrentLevel :: proc(_level : ^Level_State) -> bool {
 
     file := leveldata.Level_File{
         version = 1,
-        tile_layers = make([dynamic]leveldata.Tile_Layer_Data, 0, 1),
+        tile_layers = make([dynamic]leveldata.Tile_Layer_Data, 0, TILEMAP_LAYER_COUNT),
     }
     defer leveldata.DestroyLevelFile(&file)
 
-    append(&file.tile_layers, BuildTileLayerData(_level))
+    append(&file.tile_layers, BuildTileLayerData(_level, .Ground))
+    append(&file.tile_layers, BuildTileLayerData(_level, .Walls))
+    append(&file.tile_layers, BuildTileLayerData(_level, .Decoration))
 
     path := PathBuffer_String(&_level.editor.current_level_path)
     ok := leveldata.SaveLevelFile(path, file)
@@ -111,13 +115,20 @@ LoadLevelFromPath :: proc(_level : ^Level_State, _path : string) -> bool {
     }
     defer leveldata.DestroyLevelFile(&file)
 
-    if len(file.tile_layers) <= 0 {
-        log.errorf("LoadLevelFromPath: '{}' contains no tile layers", _path)
-        return false
-    }
+    ClearAllTileLayers(_level)
 
-    if !ApplyTileLayerData(_level, file.tile_layers[0]) {
-        return false
+    for i := 0; i < len(file.tile_layers); i += 1 {
+        layer_data := file.tile_layers[i]
+
+        layer, ok := TilemapLayerFromName(layer_data.name)
+        if !ok {
+            log.warnf("LoadLevelFromPath: unknown layer '{}', skipping", layer_data.name)
+            continue
+        }
+
+        if !ApplyTileLayerData(_level, layer, layer_data) {
+            return false
+        }
     }
 
     if !PathBuffer_Set(&_level.editor.current_level_path, _path) {

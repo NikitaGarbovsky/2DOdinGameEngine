@@ -86,3 +86,54 @@ ClearTilemap :: proc(_tmap : ^Tilemap) {
         delete_key(&_tmap.tiles, cell)
     }
 }
+
+GetTilemapForLayer :: proc(_level : ^Level_State, _layer : Tilemap_Layer) -> ^Tilemap {
+    return &_level.tmaps[int(_layer)]
+}
+
+GetSelectedEditorTilemap :: proc(_level : ^Level_State) -> ^Tilemap {
+    return GetTilemapForLayer(_level, _level.editor.selected_layer)
+}
+
+ClearAllTileLayers :: proc(_level : ^Level_State) {
+    for i := 0; i < TILEMAP_LAYER_COUNT; i += 1 {
+        ClearTilemap(&_level.tmaps[i])
+    }
+}
+
+TilemapLayerLabel :: proc(_layer : Tilemap_Layer) -> cstring {
+    switch _layer {
+    case .Ground : return "Ground"
+    case .Walls : return "Walls"
+    case .Decoration : return "Decorations"
+    }
+    return "Unknown"
+}
+
+TilemapLayerName :: proc(_layer : Tilemap_Layer) -> string {
+    switch _layer {
+    case .Ground : return "ground"
+    case .Walls : return "walls"
+    case .Decoration : return "decorations"
+    }
+    return "unknown"
+}
+
+TilemapLayerFromName :: proc(_name : string) -> (Tilemap_Layer, bool) {
+    switch _name {
+    case "ground" : return .Ground, true
+    case "walls" : return .Walls, true
+    case "decorations" : return .Decoration, true
+    }
+    return .Ground, false
+}
+
+// Provides a bias for sorting of different layers
+TilemapLayerSortBias :: proc(_layer : Tilemap_Layer) -> i32 {
+    switch _layer {
+    case .Ground : return 0
+    case .Walls : return 100
+    case .Decoration : return 200
+    }
+    return 0
+}
