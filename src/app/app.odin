@@ -36,7 +36,7 @@ Init :: proc(_app : ^AppState) {
 
 	// Temp setting for camera testing, #TODO: remove when input(mouse scroll/camera zoom) is implemented
 	_app.renderer.camera.position = {960, 540}
-	_app.renderer.camera.zoom = 1
+	_app.renderer.camera.zoom = 1.5
 }
 
 // Runs the main loop of the application, depending on the current app state.
@@ -56,7 +56,7 @@ Run :: proc(_app : ^AppState) {
 			editorimgui.EditorImgui_BeginFrame()
 
 			// Build UI widgets
-			//editorimgui.DrawAssetBrowser() #TODO: implement asset browser here.
+			editorimgui.DrawAssetBrowser() // #TODO: implement asset browser here.
 			tilemap.DrawEditorUI(&_app.level)
 			
 			if _app.level.editor.palette_open { // Only enable if tilepalette in editor is open.

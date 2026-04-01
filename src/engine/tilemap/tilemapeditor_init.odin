@@ -43,7 +43,7 @@ InitEditorPallete_Cave :: proc(
     _level.editor.palette_open = false
     _level.editor.selected_group = .Ground
     _level.editor.palette_thumb_size = 72
-    _level.editor.palette_window_size = {480, 360}
+    _level.editor.palette_window_size = {480, 600}
     _level.editor.palette_items = _level.editor.palette_items
 
     // Creates a meta data file which will help configure parts of the loaded sprite sheet 

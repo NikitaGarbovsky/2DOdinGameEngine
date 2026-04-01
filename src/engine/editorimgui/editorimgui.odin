@@ -21,8 +21,25 @@ InitEditorImgui :: proc(_window : ^sdl.Window,
     imgui.set_current_context(ctx); assert(imgui.get_current_context() != nil)
     imgui.CHECKVERSION() // Validates compatibility of this imgui version
 
-    ok1 := imgui_impl_sdl3.init_for_sdlgpu(_window); assert(ok1)
+    // Load fonts before initializating backend
+    io := imgui.get_io()
+    s_editor_font := imgui.font_atlas_add_font_from_file_ttf(
+        io.fonts, 
+        "Resources/Fonts/AlteHaasGroteskRegular.ttf", 
+        18.0, 
+        nil, 
+        imgui.font_atlas_get_glyph_ranges_default(io.fonts),
+    )
+    l_editor_font := imgui.font_atlas_add_font_from_file_ttf(
+        io.fonts, 
+        "Resources/Fonts/AlteHaasGroteskBold.ttf", 
+        22.0, 
+        nil,
+        imgui.font_atlas_get_glyph_ranges_default(io.fonts),
+    )
 
+    // Init backends
+    ok1 := imgui_impl_sdl3.init_for_sdlgpu(_window); assert(ok1)
     initinfo : imgui_impl_sdlgpu3.Init_Info = {_device, _tformat, _sampleCount}
     ok2 := imgui_impl_sdlgpu3.init(&initinfo); assert(ok2)
 }

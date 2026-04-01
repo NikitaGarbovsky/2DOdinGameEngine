@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "tile_layers": [
+    {
+      "name": "ground",
+      "tiles": [
+        {
+          "x": 32,
+          "y": 2,
+          "tile": "track_08"
+        },
+        {
+          "x": 35,
+          "y": 5,
+          "tile": "track_08"
+        },
+        {
+          "x": 33,
+          "y": 10,
+          "tile": "track_08"
+        },
+        {
+          "x": 36,
+          "y": 12,
+          "tile": "track_08"
+        },
+        {
+          "x": 38,
+          "y": 12,
+          "tile": "track_08"
+        }
+      ]
+    },
+    {
+      "name": "walls",
+      "tiles": [
+
+      ]
+    },
+    {
+      "name": "decorations",
+      "tiles": [
+
+      ]
+    }
+  ]
+}

@@ -15,7 +15,10 @@ Platform :: struct {
 Init :: proc(_p : ^Platform) {
     ok := sdl.Init({.VIDEO, .EVENTS}); assert(ok)
 
-    _p.window = sdl.CreateWindow("2DOdinGameEngine", 1920, 1080, sdl.WINDOW_RESIZABLE); assert(_p.window != nil)
+    flags := sdl.WindowFlags{
+        .RESIZABLE,
+    }
+    _p.window = sdl.CreateWindow("2DOdinGameEngine", 1920, 1080, flags); assert(_p.window != nil)
 
     _p.gpu = sdl.CreateGPUDevice({.SPIRV}, true, nil); assert(_p.gpu != nil)
 
