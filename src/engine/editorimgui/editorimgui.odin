@@ -52,3 +52,14 @@ GetInputCapture :: proc() -> Input_Capture {
         keyboard = io.want_capture_keyboard,
     }
 }
+
+// Called during the update loop, updates editor frame stats per frame.
+UpdateEditorDebugInfo :: proc(_fps , _ms: f64, _batchCount : int, _worldRendererd, _totalRendered : u32, _culledEntitySprites, _culledTiles : int) {
+    frameDebugInfo.framerate = _fps
+    frameDebugInfo.ms = _ms
+    frameDebugInfo.batchCount = _batchCount
+    frameDebugInfo.renderedWorldElementsThisFrame = _worldRendererd
+    frameDebugInfo.totalRenderedElementsThisFrame = _totalRendered
+    frameDebugInfo.culledEntitySpriteThisFrame = _culledEntitySprites
+    frameDebugInfo.culledTilemapSpriteThisFrame = _culledTiles
+}

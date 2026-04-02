@@ -209,7 +209,7 @@ InitSpriteBatcher :: proc(_renderer : ^Renderer, _max_instances : u32) -> bool {
 }
 
 // Builds the batches of renderable items for the scene
-BuildBatches :: proc(_items : []renderdata.Render_Item, _out_instances : ^[dynamic]renderdata.Sprite_Instance, _out_batches : ^[dynamic]renderdata.Batch) {
+BuildBatches :: proc(_renderer : ^Renderer, _items : []renderdata.Render_Item, _out_instances : ^[dynamic]renderdata.Sprite_Instance, _out_batches : ^[dynamic]renderdata.Batch) {
     clear(_out_instances)
     clear(_out_batches)
 
@@ -248,9 +248,7 @@ BuildBatches :: proc(_items : []renderdata.Render_Item, _out_instances : ^[dynam
         instance_count = count,
     })
 
-    // TODO: Put these values into a debug output for dear-imgui
-    // fmt.println("Count:", count)
-    // fmt.println("Batches:", len(_out_batches))
+    
 }
 
 InitSpritePipeline :: proc(_renderer : ^Renderer, _vert_code, _frag_code : []u8) -> bool {
@@ -475,6 +473,7 @@ SubmitRenderBatches :: proc(_renderer : ^Renderer, _batches : []renderdata.Batch
     current_material : renderdata.Material_Key
     first := true
 
+    
     for batch in _batches {
         if first || batch.material != current_material {
             BindMaterial(_renderer, batch.material)
@@ -491,6 +490,19 @@ SubmitRenderBatches :: proc(_renderer : ^Renderer, _batches : []renderdata.Batch
             batch.first_instance,
         )
     }
+
+    // ============= Debug info for the editor =============
+        _renderer.batchCountThisFrame = len(_batches)
+        totalRenderCount : u32 
+        world_instance_count : u32
+        for batch in _batches {
+            totalRenderCount += batch.instance_count
+            if batch.pass == .World {
+                world_instance_count += batch.instance_count
+            }
+        }
+        _renderer.renderedWorldElementsThisFrame = world_instance_count
+        _renderer.totalRenderedElementsThisFrame = totalRenderCount
 }
 
 // Helper to look up the material resource and binds them (before the batch draw)
@@ -516,9 +528,6 @@ BindMaterial :: proc(_renderer : ^Renderer, _material : renderdata.Material_Key)
 // Uploads all the sprite instances to the gpu that are due to be renderered, asynchronously (on gpu)
 UploadInstancedata :: proc(_renderer : ^Renderer, _instances : []renderdata.Sprite_Instance) {
     if len(_instances) == 0 do return
-
-    // #TODO: Add this to dear-imgui renderer debug output
-    //fmt.printfln("Sprite_Instance Count {}", len(_instances))
 
     bytes_needed : u32 = u32(len(_instances)) * size_of(renderdata.Sprite_Instance)
     assert(bytes_needed <= _renderer.sprite_batcher.max_instances * size_of(renderdata.Sprite_Instance))

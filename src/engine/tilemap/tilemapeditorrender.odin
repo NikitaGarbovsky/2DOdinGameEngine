@@ -127,7 +127,7 @@ AppendLineItem :: proc(
     _out_items: ^[dynamic]renderdata.Render_Item,
 ) {
     item := renderdata.Render_Item{
-        pass = .World,
+        pass = .Debug,
         sort_layer = _sort_layer,
         y_sort = _center[1],
 

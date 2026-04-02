@@ -20,7 +20,7 @@ RenderWorld :: proc(_world : ^ecs.EntityWorld, _level : ^tilemap.Level_State ,_r
     clear(&_renderer.sprite_batcher.items)    
 
     // 2. Extract the renderable tilemap & entity data
-    ExtractTilemapRenderItems(_level, &_renderer.camera, _level.editor.tile_w, 
+    ExtractTilemapRenderItems(_level, _renderer, _level.editor.tile_w, 
         _level.editor.tile_h, &_renderer.sprite_batcher.items)
     ExtractEntityRenderItems(_world, _renderer ,&_renderer.sprite_batcher.items)
 
@@ -36,7 +36,7 @@ RenderWorld :: proc(_world : ^ecs.EntityWorld, _level : ^tilemap.Level_State ,_r
     renderer.SortRenderItems(_renderer.sprite_batcher.items[:])
 
     // 4. Build the batches
-    renderer.BuildBatches(
+    renderer.BuildBatches(_renderer,
         _renderer.sprite_batcher.items[:],
         &_renderer.sprite_batcher.instances,
         &_renderer.sprite_batcher.batches,
@@ -58,10 +58,10 @@ ExtractEntityRenderItems :: proc(
     _renderer : ^renderer.Renderer,
     _out_items : ^[dynamic]renderdata.Render_Item) 
 {
+    cullcount : int
     for i := 0; i < len(_entityWorld.sprites.entities); i += 1 {
         e := _entityWorld.sprites.entities[i]
         sprite := _entityWorld.sprites.data[i]
-
         // Don't extract any entities that dont have a transform, this is an error
         transform, ok := ecs.GetComponent(&_entityWorld.transforms, e)
         if !ok {
@@ -72,8 +72,7 @@ ExtractEntityRenderItems :: proc(
         }
 
         // Don't extract entity sprites that aren't visible (culling)
-        // #TODO: Put this into a debug window for imgui
-        if !IsEntitySpriteVisible(&_renderer.camera, transform^, sprite) do continue
+        if !IsEntitySpriteVisible(&_renderer.camera, transform^, sprite, &cullcount) do continue
 
         item := renderdata.Render_Item{
             pass = .World,
@@ -103,14 +102,15 @@ ExtractEntityRenderItems :: proc(
 
         append(_out_items, item)
     }
-}
 
+    _renderer.culledEntityElementsThisFrame = cullcount
+}
 
 // Gets all the tiles from the tilemap & their layers, convert tilemap coordinate to world pos, 
 // checks if their visible, if they are, create a new render item and append it to the render list for this frame.
 ExtractTilemapRenderItems :: proc(
     _level : ^tilemap.Level_State,
-    _cam: ^renderdata.Camera2D,
+    _renderer: ^renderer.Renderer,
     _cell_w : f32,
     _cell_h : f32,
     _out_items: ^[dynamic]renderdata.Render_Item,
@@ -121,6 +121,8 @@ ExtractTilemapRenderItems :: proc(
         .Decoration,
     }
 
+    cullcount : int
+    
     for layer in tilemapLayers {
         tmap := tilemap.GetTilemapForLayer(_level, layer)
         layer_sort_bias := tilemap.TilemapLayerSortBias(layer)
@@ -128,10 +130,10 @@ ExtractTilemapRenderItems :: proc(
         for cell, placed in tmap.tiles {
             tiledef, ok := tilemap.GetTileDef(&_level.defsLibrary, placed.def_id)
             if !ok do continue
-
             world_pos := tilemap.IsoGridCoordinateToWorldPos(cell, _cell_w, _cell_h)
 
-            if !IsTileVisible(_cam, world_pos, tiledef) do continue
+            // Don't extract tilemap sprites that aren't visible (culling)
+            if !IsTileVisible(&_renderer.camera, world_pos, tiledef, &cullcount) do continue
 
             sort_layer := layer_sort_bias + tiledef.layer
 
@@ -166,4 +168,6 @@ ExtractTilemapRenderItems :: proc(
             append(_out_items, item)
         }
     }
+
+    _renderer.culledTilemapElementsThisFrame = cullcount
 }

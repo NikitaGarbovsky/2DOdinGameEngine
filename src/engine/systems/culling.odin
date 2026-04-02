@@ -5,6 +5,7 @@ import omath "core:math"
 import "../components"
 import "../renderdata"
 import "../tilemap"
+import "../editorimgui"
 
 @private
 RectOverlaps :: proc(_a, _b : renderdata.Rect2D) -> bool {
@@ -51,11 +52,18 @@ EntitySpriteWorldAABB :: proc(_transform : components.Transform,
 @private
 IsEntitySpriteVisible :: proc(_cam : ^renderdata.Camera2D, 
     _transform : components.Transform, 
-    _sprite : components.Sprite) -> bool
+    _sprite : components.Sprite,
+    _cullCount : ^int) -> bool
 {
     cam_rect := renderdata.CameraWorldRect(_cam)
     sprite_rect := EntitySpriteWorldAABB(_transform, _sprite)
-    return RectOverlaps(cam_rect, sprite_rect)
+    overlaps := RectOverlaps(cam_rect, sprite_rect)
+    if overlaps do return true 
+    if !overlaps {
+        _cullCount^ += 1
+        return false
+    }
+    return false
 }
 
 @private
@@ -77,9 +85,18 @@ TileMapTileAABB :: proc(world_pos: [2]f32, def: ^tilemap.Tile_Definition) -> ren
 @private
 IsTileVisible :: proc(_cam: ^renderdata.Camera2D, 
     _world_pos: [2]f32, 
-    _def: ^tilemap.Tile_Definition) -> bool 
+    _def: ^tilemap.Tile_Definition,
+    _cullCount : ^int) -> bool 
 {
     cam_rect  := renderdata.CameraWorldRect(_cam)
     tile_rect := TileMapTileAABB(_world_pos, _def)
-    return RectOverlaps(cam_rect, tile_rect)
+
+    overlaps := RectOverlaps(cam_rect, tile_rect)
+
+    if overlaps do return true 
+    if !overlaps {
+        _cullCount^ += 1
+        return false
+    }
+    return false
 }

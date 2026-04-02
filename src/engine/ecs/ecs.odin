@@ -29,6 +29,7 @@ DeleteEntity :: proc(_world : ^EntityWorld, _entityToDelete : Entity) {
     // Remove from every component store in the world
     RemoveComponent(&_world.transforms, _entityToDelete)
     RemoveComponent(&_world.sprites, _entityToDelete)
+    RemoveComponent(&_world.names, _entityToDelete)
     // #TODO: Add other component stores when implemented.(colliders etc)
 
     delete_key(&_world.alive, _entityToDelete)

@@ -13,6 +13,8 @@ InputState :: struct {
     mouse_y : f32,
     mouse_dx : f32,
     mouse_dy : f32,
+    mouse_scroll_up : f32,
+    mouse_scroll_down : f32,
 
     left_down    : bool,
     left_pressed : bool,

@@ -50,12 +50,12 @@ TickFrameStats :: proc(stats : ^Frame_Stats) {
     stats.accum_seconds += dt
     stats.frame_count += 1
 
-    if stats.accum_seconds >= 1.0 {
+    if stats.accum_seconds >= 0.5 {
         stats.fps = f64(stats.frame_count) / stats.accum_seconds
         stats.ms_per_frame = 1000.0 / stats.fps
 
         // print once per second
-        fmt.println("FPS:", stats.fps, "  MS:", stats.ms_per_frame)
+        //fmt.println("FPS:", stats.fps, "  MS:", stats.ms_per_frame)
 
         stats.accum_seconds = 0
         stats.frame_count = 0

@@ -56,7 +56,12 @@ Run :: proc(_app : ^AppState) {
 			editorimgui.EditorImgui_BeginFrame()
 
 			// Build UI widgets
-			editorimgui.DrawAssetBrowser() // #TODO: implement asset browser here.
+			editorimgui.DrawAssetBrowser() 
+			editorimgui.UpdateEditorDebugInfo(_app.stats.fps, _app.stats.ms_per_frame, _app.renderer.batchCountThisFrame, 
+				_app.renderer.renderedWorldElementsThisFrame, _app.renderer.totalRenderedElementsThisFrame, 
+				_app.renderer.culledEntityElementsThisFrame, _app.renderer.culledTilemapElementsThisFrame)
+			editorimgui.DrawDebugInfo()
+
 			tilemap.DrawEditorUI(&_app.level)
 			
 			if _app.level.editor.palette_open { // Only enable if tilepalette in editor is open.
@@ -65,6 +70,8 @@ Run :: proc(_app : ^AppState) {
 				editor_input := tilemap.Tilemap_Editor_Input{
 					mouse_screen = {_app.input.mouse_x, _app.input.mouse_y},
 					mouse_delta = {_app.input.mouse_dx, _app.input.mouse_dy},
+					mouse_scroll_down = _app.input.mouse_scroll_down,
+					mouse_scroll_up = _app.input.mouse_scroll_up,
 
 					left_clicked = _app.input.left_pressed && !ui_capture.mouse,
 					right_down = _app.input.right_down,

@@ -10,6 +10,8 @@ import sdl "vendor:sdl3"
 ResetInputState :: proc(_inputS: ^InputState) {
     _inputS.left_pressed = false
     _inputS.delete_pressed = false
+    _inputS.mouse_scroll_down = 0
+    _inputS.mouse_scroll_up = 0
 
     _inputS.mouse_dx = 0
     _inputS.mouse_dy = 0
@@ -85,6 +87,14 @@ ProcessSDLEvents :: proc(
         case .WINDOW_RESIZED:
             _width^ = ev.window.data1
             _height^ = ev.window.data2
+
+        case .MOUSE_WHEEL: 
+            if ev.wheel.y > 0 {
+                _input.mouse_scroll_up = ev.wheel.y
+            }
+            if ev.wheel.y < 0 {
+                _input.mouse_scroll_down = ev.wheel.y
+            }
         }
     }
 }

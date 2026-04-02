@@ -25,6 +25,12 @@ Renderer :: struct {
 
     textures : [dynamic]Texture_Resource,
     samplers : [dynamic]Sampler_Resource,
+
+    batchCountThisFrame : int,
+    renderedWorldElementsThisFrame : u32,  
+    totalRenderedElementsThisFrame : u32,
+    culledEntityElementsThisFrame : int,
+    culledTilemapElementsThisFrame : int,
 }
 
 // Holds the shared uniform data for the batched sprites

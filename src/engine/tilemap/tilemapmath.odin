@@ -29,10 +29,9 @@ WorldToIsoGridFloat :: proc(_pos : [2]f32, _tile_w, _tile_h : f32) -> [2]f32 {
     return {gx, gy}
 }
 
-// #TODO: Use this for mouse click editor tile selection, hover, etc..
 WorldToIsoGridCoordinate :: proc(_pos : [2]f32, _tile_w, _tile_h : f32) -> Tile_Coord {
     // The passed in position will be an approixmation of where the tile on the tilemap could be,
-    // (the player clicks within a tile somewhere)
+    // (the user clicks within a tile somewhere, onhover etc)
     grid_f := WorldToIsoGridFloat(_pos, _tile_w, _tile_h)
 
     // So we round it to select that exact tile in the grid

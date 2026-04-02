@@ -11,8 +11,12 @@ CameraSetZoom :: proc(_cam : ^Camera2D, _zoom : f32) {
     _cam.zoom = max(0.05, _zoom)
 }
 
-CameraAddZoom :: proc(_cam : ^Camera2D, _delta : f32) {
-    _cam.zoom = max(0.05, _cam.zoom + _delta)
+CameraZoomIn :: proc(_cam : ^Camera2D, _delta : f32) {
+    _cam.zoom = min(3, _cam.zoom + _delta / 10)
+}
+
+CameraZoomOut :: proc(_cam : ^Camera2D, _delta : f32) {
+    _cam.zoom = max(1, _cam.zoom + _delta / 10)
 }
 
 CameraViewMatrix :: proc(_cam : ^Camera2D) -> glm.mat4 {

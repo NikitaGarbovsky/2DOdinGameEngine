@@ -6,7 +6,8 @@ import imgui "Dependencies:odin-imgui"
 /// Definitions for editorimgui objects utilized by the editorimgui
 ///
 
-is_asset_browser_open: bool
+is_asset_browser_open : bool
+is_debug_info_open : bool
 
 // The font data the editor uses for imgui
 s_editor_font : ^imgui.Font
@@ -18,3 +19,14 @@ Input_Capture :: struct {
     keyboard : bool,
 }
 
+Editor_Debug_Info :: struct {
+    framerate : f64,
+    ms : f64,
+    batchCount : int,
+    renderedWorldElementsThisFrame : u32,
+    totalRenderedElementsThisFrame : u32,
+    culledEntitySpriteThisFrame : int,
+    culledTilemapSpriteThisFrame : int,
+}
+
+frameDebugInfo : Editor_Debug_Info

@@ -1,5 +1,6 @@
 package tilemap
 
+import "core:log"
 import "../renderdata"
 import imgui "Dependencies:odin-imgui"
 import "core:strings"
@@ -13,6 +14,8 @@ import "core:strings"
 Tilemap_Editor_Input :: struct {
     mouse_screen : [2]f32,
     mouse_delta  : [2]f32,
+    mouse_scroll_up : f32,
+    mouse_scroll_down : f32,
 
     left_clicked   : bool,
     right_down     : bool,
@@ -453,6 +456,17 @@ UpdateEditor :: proc(
             RemoveTile(active_tmap, hovered)
         }
     }
+
+    if _input.mouse_scroll_up > 0{
+        
+        renderdata.CameraZoomIn(_cam, _input.mouse_scroll_up)
+        log.debug("Zoom In: ", _cam.zoom)
+    }
+
+    if _input.mouse_scroll_down < 0{
+        renderdata.CameraZoomOut(_cam, _input.mouse_scroll_down)
+        log.debug("Zoom Out: ", _cam.zoom)
+    } 
 }
 
 UpdateEditorCameraPan :: proc(
