@@ -7,14 +7,12 @@ import glm "core:math/linalg/glsl"
 ///
 
 
-CameraSetZoom :: proc(_cam : ^Camera2D, _zoom : f32) {
-    _cam.zoom = max(0.05, _zoom)
-}
-
+// Used by input mouse scroll
 CameraZoomIn :: proc(_cam : ^Camera2D, _delta : f32) {
     _cam.zoom = min(3, _cam.zoom + _delta / 10)
 }
 
+// Used by input mouse scroll
 CameraZoomOut :: proc(_cam : ^Camera2D, _delta : f32) {
     _cam.zoom = max(1, _cam.zoom + _delta / 10)
 }

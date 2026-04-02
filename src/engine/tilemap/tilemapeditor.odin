@@ -324,7 +324,9 @@ DrawTilePaletteGrid :: proc(_level : ^Level_State) {
     spacing: f32 = 8.0
 
     avail := imgui.get_content_region_avail()
+    
     cols := int((avail.x + spacing) / (thumb_size + spacing))
+    if _level.editor.selected_group != .Ground {cols = 5} // lazy af solution but it works!
     if cols < 1 do cols = 1
 
     visible_index := 0
@@ -460,12 +462,12 @@ UpdateEditor :: proc(
     if _input.mouse_scroll_up > 0{
         
         renderdata.CameraZoomIn(_cam, _input.mouse_scroll_up)
-        log.debug("Zoom In: ", _cam.zoom)
+        //log.debug("Zoom In: ", _cam.zoom)
     }
 
     if _input.mouse_scroll_down < 0{
         renderdata.CameraZoomOut(_cam, _input.mouse_scroll_down)
-        log.debug("Zoom Out: ", _cam.zoom)
+        //log.debug("Zoom Out: ", _cam.zoom)
     } 
 }
 
