@@ -22,6 +22,7 @@ AppState :: struct {
     level : tilemap.Level_State,
 
     mode : App_Mode,
+    play_state : Play_State,
 }
 appState : AppState
 
@@ -32,33 +33,41 @@ App_Mode :: enum u8 {
 
 editorContext : systems.Editor_Mode_Context
 
-InitFrameStats :: proc(stats : ^systems.Frame_Stats) {
-    stats.freq = sdl.GetPerformanceFrequency()
-    stats.last_counter = sdl.GetPerformanceCounter()
-    stats.accum_seconds = 0
-    stats.frame_count = 0
-    stats.fps = 0
-    stats.ms_per_frame = 0
+Play_State :: struct {
+    player_entity : ecs.Entity,
+    has_player : bool,
+    move_speed : [2]f32
 }
 
-TickFrameStats :: proc(stats : ^systems.Frame_Stats) {
+InitFrameStats :: proc(_stats : ^systems.Frame_Stats) {
+    _stats.freq = sdl.GetPerformanceFrequency()
+    _stats.last_counter = sdl.GetPerformanceCounter()
+    _stats.accum_seconds = 0
+    _stats.frame_count = 0
+    _stats.fps = 0
+    _stats.ms_per_frame = 0
+    _stats.deleta_seconds = 0
+}
+
+TickFrameStats :: proc(_stats : ^systems.Frame_Stats) {
     now := sdl.GetPerformanceCounter()
-    delta_counts := now - stats.last_counter
-    stats.last_counter = now
+    delta_counts := now - _stats.last_counter
+    _stats.last_counter = now
 
-    dt := f64(delta_counts) / f64(stats.freq)
+    dt := f64(delta_counts) / f64(_stats.freq)
+    _stats.deleta_seconds = f32(dt)
 
-    stats.accum_seconds += dt
-    stats.frame_count += 1
+    _stats.accum_seconds += dt
+    _stats.frame_count += 1
 
-    if stats.accum_seconds >= 0.5 {
-        stats.fps = f64(stats.frame_count) / stats.accum_seconds
-        stats.ms_per_frame = 1000.0 / stats.fps
+    if _stats.accum_seconds >= 0.5 {
+        _stats.fps = f64(_stats.frame_count) / _stats.accum_seconds
+        _stats.ms_per_frame = 1000.0 / _stats.fps
 
         // print once per second
         //fmt.println("FPS:", stats.fps, "  MS:", stats.ms_per_frame)
 
-        stats.accum_seconds = 0
-        stats.frame_count = 0
+        _stats.accum_seconds = 0
+        _stats.frame_count = 0
     }
 }

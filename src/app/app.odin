@@ -30,9 +30,12 @@ Init :: proc(_app : ^AppState) {
 	tilemap.InitLevelState(&_app.level,64,32)
 	tilemap.InitCaveTileResources(&_app.level, &_app.renderer)
 	
-	// Default to editor mode
+	// Default to editor mode, also initializes editor.
 	EnterEditormode(_app) 
 	
+	_app.play_state.has_player = false
+	_app.play_state.move_speed = 220
+
 	// Temp setting for camera testing, #TODO: remove when input(mouse scroll/camera zoom) is implemented
 	_app.renderer.camera.position = {960, 540}
 	_app.renderer.camera.zoom = 1.5
@@ -41,6 +44,7 @@ Init :: proc(_app : ^AppState) {
 // Runs the main loop of the application, depending on the current app state.
 Run :: proc(_app : ^AppState) {
 	for _app.platform.running {
+		TickFrameStats(&_app.stats) // Update frame rate details 
 
 		// Create callback for editor imgui input detection
 		event_callback := input.Event_Callback(nil)
@@ -82,8 +86,6 @@ Run :: proc(_app : ^AppState) {
 			// Push all accumulated frame data to GPU
 			renderer.EndFrame(&_app.renderer)
 		}
-
-		TickFrameStats(&_app.stats) // Update frame rate details 
 	}
 }
 

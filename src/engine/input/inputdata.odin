@@ -16,15 +16,20 @@ InputState :: struct {
     mouse_scroll_up : f32,
     mouse_scroll_down : f32,
 
-    left_down    : bool,
+    left_down : bool,
     left_pressed : bool,
 
     right_down : bool,
     
-    delete_down    : bool,
+    delete_down : bool,
     delete_pressed : bool,
 
     space_down : bool,
+
+    move_up : bool,
+    move_down : bool,
+    move_left : bool,
+    move_right : bool,
 
     toggle_appmode_pressed : bool,
 }

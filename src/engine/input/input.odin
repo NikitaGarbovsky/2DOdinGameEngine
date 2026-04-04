@@ -79,6 +79,22 @@ ProcessSDLEvents :: proc(
                 if ev.key.scancode == sdl.GetScancodeFromName("F5") {
                     _input.toggle_appmode_pressed = true
                 }
+
+                if ev.key.scancode == sdl.GetScancodeFromName("W") {
+                    _input.move_up = true
+                }
+
+                if ev.key.scancode == sdl.GetScancodeFromName("A") {
+                    _input.move_up = true
+                }
+                
+                if ev.key.scancode == sdl.GetScancodeFromName("S") {
+                    _input.move_up = true
+                }
+                
+                if ev.key.scancode == sdl.GetScancodeFromName("D") {
+                    _input.move_up = true
+                }
             }
 
         case .KEY_UP:
@@ -88,6 +104,25 @@ ProcessSDLEvents :: proc(
 
             if ev.key.scancode == sdl.GetScancodeFromName("Space") {
                 _input.space_down = false
+            }
+
+            if ev.key.scancode == sdl.GetScancodeFromName("F5") {
+                _input.toggle_appmode_pressed = false
+            }
+            if ev.key.scancode == sdl.GetScancodeFromName("W") {
+                    _input.move_up = false
+            }
+
+            if ev.key.scancode == sdl.GetScancodeFromName("A") {
+                _input.move_up = false
+            }
+            
+            if ev.key.scancode == sdl.GetScancodeFromName("S") {
+                _input.move_up = false
+            }
+            
+            if ev.key.scancode == sdl.GetScancodeFromName("D") {
+                _input.move_up = false
             }
 
         case .WINDOW_RESIZED:

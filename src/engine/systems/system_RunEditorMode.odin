@@ -31,7 +31,8 @@ Frame_Stats :: struct {
     accum_seconds : f64,
     frame_count : i32,
     fps : f64,
-    ms_per_frame: f64,
+    ms_per_frame : f64,
+    deleta_seconds : f32,
 }
 imgui_draw_data : ^imgui.Draw_Data
 
