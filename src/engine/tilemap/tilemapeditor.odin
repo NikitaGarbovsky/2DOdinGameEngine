@@ -440,7 +440,7 @@ UpdateEditor :: proc(
     }
 
     world_pos := renderdata.ScreenToWorldPos(_cam, _input.mouse_screen)
-    hovered := WorldToIsoGridCoordinate(world_pos, _level.editor.tile_w, _level.editor.tile_h)
+    hovered := WorldToIsoGridCoordinate(world_pos, _level.resources.tile_w, _level.resources.tile_h)
 
     _level.editor.hovered_cell = hovered
     _level.editor.has_hovered_cell = true

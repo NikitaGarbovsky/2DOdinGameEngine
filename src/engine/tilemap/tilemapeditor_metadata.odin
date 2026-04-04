@@ -24,7 +24,7 @@ Tile_Origin_Override_File :: struct {
 }
 
 SaveTileOriginOverrides :: proc(_level : ^Level_State) {
-    if len(_level.editor.tileset_meta_path) == 0 do return
+    if len(_level.resources.tileset_meta_path) == 0 do return
 
     file := Tile_Origin_Override_File{
         tiles = make([dynamic]Tile_Origin_Override, 0, len(_level.defsLibrary.defs)),
@@ -54,19 +54,19 @@ SaveTileOriginOverrides :: proc(_level : ^Level_State) {
     }
     defer delete(data)
 
-    write_err := os2.write_entire_file(_level.editor.tileset_meta_path, data)
+    write_err := os2.write_entire_file(_level.resources.tileset_meta_path, data)
     if write_err != nil {
         // #TODO: add in engine console output here.
         log.debugf("Failed to write to origins file")
         return
     }
-    fmt.printf("Successfully Saved Tile Origins to metadata file: {}", _level.editor.tileset_meta_path) // #TODO: add in engine console output here.
+    fmt.printf("Successfully Saved Tile Origins to metadata file: {}", _level.resources.tileset_meta_path) // #TODO: add in engine console output here.
 }
 
 LoadTileOriginOverrides :: proc(_level : ^Level_State) {
-    if len(_level.editor.tileset_meta_path) == 0 do return
+    if len(_level.resources.tileset_meta_path) == 0 do return
 
-    data, read_err := os2.read_entire_file_from_path(_level.editor.tileset_meta_path, context.temp_allocator) // #TODO: CLEAR THIS, ALLOCATING MEMORY!
+    data, read_err := os2.read_entire_file_from_path(_level.resources.tileset_meta_path, context.temp_allocator) // #TODO: CLEAR THIS, ALLOCATING MEMORY!
     if read_err != nil {
         // Missing file is fine on first run
         return

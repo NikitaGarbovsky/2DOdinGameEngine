@@ -25,6 +25,8 @@ InputState :: struct {
     delete_pressed : bool,
 
     space_down : bool,
+
+    toggle_appmode_pressed : bool,
 }
 
 // Used by editor imgui to process sdl events (input, editorimgui has priority)

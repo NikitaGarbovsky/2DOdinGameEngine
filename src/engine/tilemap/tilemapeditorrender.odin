@@ -22,8 +22,8 @@ ExtractTilemapGridOverlay :: proc(
     if _level.editor.show_grid {
         bounds := GetVisibleIsoCellBounds(
             _cam,
-            _level.editor.tile_w,
-            _level.editor.tile_h,
+            _level.resources.tile_w,
+            _level.resources.tile_h,
             2,
         )
 
@@ -31,8 +31,8 @@ ExtractTilemapGridOverlay :: proc(
             for x := bounds.min_x; x <= bounds.max_x; x += 1 {
                 AppendIsoCellOutlineItems(
                     Tile_Coord{x = x, y = y},
-                    _level.editor.tile_w,
-                    _level.editor.tile_h,
+                    _level.resources.tile_w,
+                    _level.resources.tile_h,
                     _level.editor.grid_thickness,
                     _level.editor.grid_sort_layer,
                     _level.editor.grid_color,
@@ -46,13 +46,13 @@ ExtractTilemapGridOverlay :: proc(
         hover_color := _level.editor.hover_color
 
         if _level.editor.mode == .Delete {
-            hover_color = {1.0, 0.35, 0.35, 0.85}
+            hover_color = _level.editor.hover_delete_color
         }
 
         AppendIsoCellOutlineItems(
             _level.editor.hovered_cell,
-            _level.editor.tile_w,
-            _level.editor.tile_h,
+            _level.resources.tile_w,
+            _level.resources.tile_h,
             _level.editor.grid_thickness * 2.0,
             _level.editor.grid_sort_layer + 1,
             hover_color,
@@ -222,7 +222,7 @@ AppendHoverPreviewItem :: proc(
         def, ok := GetTileDef(&_level.defsLibrary, _level.editor.selected_tile)
         if !ok do return
 
-        pos := IsoGridCoordinateToWorldPos(_level.editor.hovered_cell, _level.editor.tile_w, _level.editor.tile_h)
+        pos := IsoGridCoordinateToWorldPos(_level.editor.hovered_cell, _level.resources.tile_w, _level.resources.tile_h)
 
         // Create the render item for the hover preview tile.
         item := renderdata.Render_Item{

@@ -8,30 +8,31 @@ import "../engine/renderer"
 import "../platform"
 import "../engine/tilemap"
 import "../engine/input"
+import "../engine/systems"
 
 default_context : runtime.Context // #TODO: hook this up with sdl platform
 
 // Maintains state of the whole application
 AppState :: struct {
 	platform : platform.Platform,
-    input    : input.InputState,
+    input : input.InputState,
 	world : ecs.EntityWorld,
 	renderer : renderer.Renderer, 
-	stats    : Frame_Stats,
-    level : tilemap.Level_State
+	stats : systems.Frame_Stats,
+    level : tilemap.Level_State,
+
+    mode : App_Mode,
 }
 appState : AppState
 
-Frame_Stats :: struct {
-    freq              : u64,
-    last_counter      : u64,
-    accum_seconds     : f64,
-    frame_count       : i32,
-    fps               : f64,
-    ms_per_frame      : f64,
+App_Mode :: enum u8 {
+    Editor,
+    Playmode,
 }
 
-InitFrameStats :: proc(stats : ^Frame_Stats) {
+editorContext : systems.Editor_Mode_Context
+
+InitFrameStats :: proc(stats : ^systems.Frame_Stats) {
     stats.freq = sdl.GetPerformanceFrequency()
     stats.last_counter = sdl.GetPerformanceCounter()
     stats.accum_seconds = 0
@@ -40,7 +41,7 @@ InitFrameStats :: proc(stats : ^Frame_Stats) {
     stats.ms_per_frame = 0
 }
 
-TickFrameStats :: proc(stats : ^Frame_Stats) {
+TickFrameStats :: proc(stats : ^systems.Frame_Stats) {
     now := sdl.GetPerformanceCounter()
     delta_counts := now - stats.last_counter
     stats.last_counter = now

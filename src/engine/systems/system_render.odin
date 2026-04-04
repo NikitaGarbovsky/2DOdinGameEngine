@@ -20,8 +20,8 @@ RenderWorld :: proc(_world : ^ecs.EntityWorld, _level : ^tilemap.Level_State ,_r
     clear(&_renderer.sprite_batcher.items)    
 
     // 2. Extract the renderable tilemap & entity data
-    ExtractTilemapRenderItems(_level, _renderer, _level.editor.tile_w, 
-        _level.editor.tile_h, &_renderer.sprite_batcher.items)
+    ExtractTilemapRenderItems(_level, _renderer, _level.resources.tile_w, 
+        _level.resources.tile_h, &_renderer.sprite_batcher.items)
     ExtractEntityRenderItems(_world, _renderer ,&_renderer.sprite_batcher.items)
 
     if _level.editor.palette_open {

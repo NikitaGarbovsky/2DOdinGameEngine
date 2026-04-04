@@ -54,7 +54,9 @@ GetInputCapture :: proc() -> Input_Capture {
 }
 
 // Called during the update loop, updates editor frame stats per frame.
-UpdateEditorDebugInfo :: proc(_fps , _ms: f64, _batchCount : int, _worldRendererd, _totalRendered : u32, _culledEntitySprites, _culledTiles : int) {
+UpdateEditorDebugInfo :: proc(_fps , _ms: f64, _batchCount : int, _worldRendererd, 
+    _totalRendered : u32, _culledEntitySprites, _culledTiles : int) 
+    {
     frameDebugInfo.framerate = _fps
     frameDebugInfo.ms = _ms
     frameDebugInfo.batchCount = _batchCount
@@ -62,4 +64,14 @@ UpdateEditorDebugInfo :: proc(_fps , _ms: f64, _batchCount : int, _worldRenderer
     frameDebugInfo.totalRenderedElementsThisFrame = _totalRendered
     frameDebugInfo.culledEntitySpriteThisFrame = _culledEntitySprites
     frameDebugInfo.culledTilemapSpriteThisFrame = _culledTiles
+}
+
+ShutdownEditorImgui :: proc() {
+    imgui_impl_sdlgpu3.shutdown()
+    imgui_impl_sdl3.shutdown()
+
+    ctx := imgui.get_current_context()
+    if ctx != nil {
+        imgui.destroy_context(ctx)
+    }
 }

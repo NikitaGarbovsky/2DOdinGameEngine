@@ -15,6 +15,8 @@ ResetInputState :: proc(_inputS: ^InputState) {
 
     _inputS.mouse_dx = 0
     _inputS.mouse_dy = 0
+
+    _inputS.toggle_appmode_pressed = false
 }
 
 // Defines sdl input definitions, processes any input per update loop.
@@ -72,6 +74,10 @@ ProcessSDLEvents :: proc(
 
                 if ev.key.scancode == sdl.GetScancodeFromName("Space") {
                     _input.space_down = true
+                }
+
+                if ev.key.scancode == sdl.GetScancodeFromName("F5") {
+                    _input.toggle_appmode_pressed = true
                 }
             }
 

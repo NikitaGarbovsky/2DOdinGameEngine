@@ -63,6 +63,8 @@ Tilemap_Layer :: enum u8 {
 Level_State :: struct {
     defsLibrary : Tile_Def_Library,
     tmaps : [TILEMAP_LAYER_COUNT]Tilemap,
+
+    resources : Tilemap_Shared_Resources,
     editor : Tilemap_Editor_State,
 }
 
@@ -88,6 +90,15 @@ Palette_Item :: struct {
     preview_px : [2]f32,
 }
 
+// Resources that are shared for the tilemap itself & the editor for the tilemap
+Tilemap_Shared_Resources :: struct {
+    tileset_texture : renderdata.Texture_Handle,
+    tileset_meta_path : string,
+
+    tile_w : f32,
+    tile_h : f32,
+}
+
 Tilemap_Editor_State :: struct {
     enabled : bool,
     mode : Edit_Mode,
@@ -98,21 +109,18 @@ Tilemap_Editor_State :: struct {
     hovered_cell : Tile_Coord, 
     has_hovered_cell : bool,
 
-    tile_w : f32,
-    tile_h : f32,
-
     show_grid : bool,
     grid_sort_layer : i32,
     grid_thickness : f32,
     grid_color : [4]f32,
     hover_color : [4]f32,
+    hover_delete_color : [4]f32, 
     preview_color : [4]f32,
 
     // Palette UI
     palette_open : bool,
     selected_group : Tile_Palette_Group,
     palette_items : [dynamic]Palette_Item,
-    palette_texture : renderdata.Texture_Handle,
 
     // For ImGui 1.91.9 SDLGPU3 backend, used by the tielmap editor
     palette_texture_binding : sdl.GPUTextureSamplerBinding,
@@ -124,8 +132,6 @@ Tilemap_Editor_State :: struct {
     origin_edit_value : [2]f32,
     origin_edit_loaded : bool,
     origin_edit_loaded_for : Tile_Def_ID,
-
-    tileset_meta_path : string,
 
     current_level_path : Path_Buffer,
     pending_load_path : Path_Buffer,
