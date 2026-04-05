@@ -5,17 +5,28 @@ import sdl "vendor:sdl3"
 import renderdata "../renderdata"
 import "core:fmt"
 
+/// Comparison used when sorting render items before batching.
+// 1. Render pass first
+// 2. Then broad render layer (ground, depth-sorted world(isometric walls, player etc) atm)
+// 3. For world items items only, sort by y so lower (+Y) items draw after creating depth
+// 4. Finally sort by material by material so matching items can batch together.
 @private
 RenderItemLess :: proc(_a, _b : renderdata.Render_Item) -> bool {
+    // 1.
     if _a.pass != _b.pass do return u8(_a.pass) < u8(_b.pass)
+    // 2. 
     if _a.sort_layer != _b.sort_layer do return _a.sort_layer < _b.sort_layer
-
+    // 3.
+    if _a.pass == .World {
+        if _a.y_sort != _b.y_sort do return _a.y_sort < _b.y_sort
+    } 
+    // 4.
     if _a.material.pipeline != _b.material.pipeline do return u8(_a.material.pipeline) < u8(_b.material.pipeline)
     if _a.material.blend != _b.material.blend do return u8(_a.material.blend) < u8(_b.material.blend)
     if _a.material.texture != _b.material.texture do return u32(_a.material.texture) < u32(_b.material.texture)
     if _a.material.sampler != _b.material.sampler do return u32(_a.material.sampler) < u32(_b.material.sampler)
 
-    return _a.y_sort < _b.y_sort
+    return false // Should not reach here.
 }
 
 @private 

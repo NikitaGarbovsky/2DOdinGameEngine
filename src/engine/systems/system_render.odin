@@ -92,7 +92,7 @@ ExtractEntityRenderItems :: proc(
                     {sprite.size.x, sprite.size.y},
                     {sprite.origin.x, sprite.origin.y},
                     transform.rot,
-                    f32(sprite.layer)
+                    0
                 ),
                 uv_min = sprite.uv_min,
                 uv_max = sprite.uv_max,
@@ -125,7 +125,6 @@ ExtractTilemapRenderItems :: proc(
     
     for layer in tilemapLayers {
         tmap := tilemap.GetTilemapForLayer(_level, layer)
-        layer_sort_bias := tilemap.TilemapLayerSortBias(layer)
 
         for cell, placed in tmap.tiles {
             tiledef, ok := tilemap.GetTileDef(&_level.defsLibrary, placed.def_id)
@@ -135,14 +134,21 @@ ExtractTilemapRenderItems :: proc(
             // Don't extract tilemap sprites that aren't visible (culling)
             if !IsTileVisible(&_renderer.camera, world_pos, tiledef, &cullcount) do continue
 
-            sort_layer := layer_sort_bias + tiledef.layer
+            sort_layer := renderdata.GROUND_SORT_LAYER
+
+            switch layer {
+                case .Ground:
+                    sort_layer = renderdata.GROUND_SORT_LAYER
+                case .Walls:
+                    sort_layer = renderdata.DEPTH_SORT_LAYER
+                case .Decoration:
+                    sort_layer = renderdata.DEPTH_SORT_LAYER 
+                }
 
             item := renderdata.Render_Item{
                 pass = .World,
                 sort_layer = sort_layer,
-
-                // Sorting by world y
-                y_sort = world_pos[1],
+                y_sort = world_pos.y,
 
                 material = renderdata.Material_Key{
                     pipeline = .Sprite,

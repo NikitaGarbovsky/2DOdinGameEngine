@@ -25,14 +25,14 @@ ProcessSDLEvents :: proc(
     _running: ^bool,
     _width: ^i32,
     _height: ^i32,
-    _event_callback: Event_Callback,
+    _editorInputEventCallback: Event_Callback,
 ) {
     ResetInputState(_input)
 
     ev: sdl.Event
     for sdl.PollEvent(&ev) {
-        if _event_callback != nil {
-            _event_callback(&ev)
+        if _editorInputEventCallback != nil {
+            _editorInputEventCallback(&ev)
         }
 
         #partial switch ev.type {
@@ -85,15 +85,15 @@ ProcessSDLEvents :: proc(
                 }
 
                 if ev.key.scancode == sdl.GetScancodeFromName("A") {
-                    _input.move_up = true
+                    _input.move_left = true
                 }
                 
                 if ev.key.scancode == sdl.GetScancodeFromName("S") {
-                    _input.move_up = true
+                    _input.move_down = true
                 }
                 
                 if ev.key.scancode == sdl.GetScancodeFromName("D") {
-                    _input.move_up = true
+                    _input.move_right = true
                 }
             }
 
@@ -114,15 +114,15 @@ ProcessSDLEvents :: proc(
             }
 
             if ev.key.scancode == sdl.GetScancodeFromName("A") {
-                _input.move_up = false
+                _input.move_left = false
             }
             
             if ev.key.scancode == sdl.GetScancodeFromName("S") {
-                _input.move_up = false
+                _input.move_down = false
             }
             
             if ev.key.scancode == sdl.GetScancodeFromName("D") {
-                _input.move_up = false
+                _input.move_right = false
             }
 
         case .WINDOW_RESIZED:

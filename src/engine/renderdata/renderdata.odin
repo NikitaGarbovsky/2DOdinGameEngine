@@ -19,6 +19,11 @@ Render_Pass :: enum u8 {
     Debug,
 }
 
+// Sorting layers for entity sprites & tilemap tiles
+GROUND_SORT_LAYER :: i32(0)
+DEPTH_SORT_LAYER :: i32(100)
+FOREGROUND_SORT_LAYER :: i32(200)
+
 // Data for the rendered Sprite
 Sprite_Instance :: struct {
     model : glm.mat4,

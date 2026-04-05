@@ -55,6 +55,7 @@ SpawnPlayer :: proc(_app : ^AppState) {
 
     _app.play_state.player_entity = playerEntity
     _app.play_state.has_player = true
+    _app.play_state.move_speed = 220
 
     ecs.AddComponentToEntityWorld(
         &_app.world,
@@ -75,7 +76,7 @@ SpawnPlayer :: proc(_app : ^AppState) {
             size    = math.Vector2f32{28, 40},
             color   = {0.2, 0.9, 0.35, 1.0},
             origin  = {0.5, 1.0},
-            layer   = 0,
+            layer   = renderdata.DEPTH_SORT_LAYER,
         },
         .Sprite,
     )
@@ -85,7 +86,7 @@ SpawnPlayer :: proc(_app : ^AppState) {
         &_app.world.transforms,
         playerEntity,
         components.Transform{
-            pos = math.Vector2f32{500, 500}, // #TODO: Set the player position in the level file, reference it here on spawn.
+            pos = math.Vector2f32{1000, 1000}, // #TODO: Set the player position in the level file, reference it here on spawn.
             rot = 0
         },
         .Transform

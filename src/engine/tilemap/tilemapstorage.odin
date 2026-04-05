@@ -127,13 +127,3 @@ TilemapLayerFromName :: proc(_name : string) -> (Tilemap_Layer, bool) {
     }
     return .Ground, false
 }
-
-// Provides a bias for sorting of different layers
-TilemapLayerSortBias :: proc(_layer : Tilemap_Layer) -> i32 {
-    switch _layer {
-    case .Ground : return 0
-    case .Walls : return 100
-    case .Decoration : return 200
-    }
-    return 0
-}

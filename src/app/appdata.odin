@@ -36,7 +36,7 @@ editorContext : systems.Editor_Mode_Context
 Play_State :: struct {
     player_entity : ecs.Entity,
     has_player : bool,
-    move_speed : [2]f32
+    move_speed : f32
 }
 
 InitFrameStats :: proc(_stats : ^systems.Frame_Stats) {

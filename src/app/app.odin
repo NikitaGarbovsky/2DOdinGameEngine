@@ -30,15 +30,12 @@ Init :: proc(_app : ^AppState) {
 	tilemap.InitLevelState(&_app.level,64,32)
 	tilemap.InitCaveTileResources(&_app.level, &_app.renderer)
 	
-	// Default to editor mode, also initializes editor.
-	EnterEditormode(_app) 
-	
-	_app.play_state.has_player = false
-	_app.play_state.move_speed = 220
-
-	// Temp setting for camera testing, #TODO: remove when input(mouse scroll/camera zoom) is implemented
+	// Starting camera values
 	_app.renderer.camera.position = {960, 540}
 	_app.renderer.camera.zoom = 1.5
+
+	// Default to editor mode, also initializes editor.
+	EnterEditormode(_app) 
 }
 
 // Runs the main loop of the application, depending on the current app state.
@@ -54,7 +51,7 @@ Run :: proc(_app : ^AppState) {
 
 		// Process SDL input
 		input.ProcessSDLEvents(&_app.input, &_app.platform.running, &_app.platform.width, &_app.platform.height,
-			event_callback,) // <-- Callback, this is just null per update when in 
+			event_callback,) // <-- Callback, this is just null when not in editor mode 
 
 		// Before any rendering, pass the 
 		if _app.input.toggle_appmode_pressed { 
@@ -74,7 +71,19 @@ Run :: proc(_app : ^AppState) {
 				}
 				systems.RenderEditorMode(editorContext) 
 			}
-				
+			if _app.mode == .Playmode {
+					playContext := systems.Play_Mode_Context{
+						input_state = &_app.input,
+						frame_stats = &_app.stats,
+						entity_world = &_app.world,
+						renderer = &_app.renderer,
+						player_entity = _app.play_state.player_entity,
+						has_player = _app.play_state.has_player,
+						move_speed = _app.play_state.move_speed,
+				}
+				systems.RenderPlayMode(playContext)
+			}
+	
 			// This is "BeginWorldPass" with culling + batching attached on
 			systems.RenderWorld(&_app.world, &_app.level ,&_app.renderer)
 			renderer.EndPass(&_app.renderer)
