@@ -1,7 +1,7 @@
 package leveldata
 
 import "core:encoding/json"
-import "core:os/os2"
+import os2 "core:os"
 import "core:log"
 
 ///

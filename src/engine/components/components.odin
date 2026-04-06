@@ -41,12 +41,29 @@ Sprite :: struct {
     layer : i32,
 }
 
-Collider :: struct {
+Collider_Shape :: enum u8 {
+    Box, 
+    Circle,
+}
 
+Collider :: struct {
+    shape : Collider_Shape,
+    half_extends : math.Vector2f32,
+    radius : f32,
+    is_trigger : bool,
+}
+
+Rigid_Body_Type :: enum u8 {
+    Static,
+    Dynamic,
+    Kinematic
 }
 
 Rigid_Body :: struct {
-
+    body_type : Rigid_Body_Type,
+    fixed_rotation : bool, // No rotation cause isometric
+    linear_damping : f32, // Small amount of resistance to help with movement feel
+    gravity_scale : f32, // No gravity cause isometric
 }
 
 Interactable :: struct {

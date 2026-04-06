@@ -17,6 +17,8 @@ EntityWorld :: struct {
     transforms : Component_Store(components.Transform),
     sprites : Component_Store(components.Sprite),
     names : Component_Store(components.Name),
+    colliders : Component_Store(components.Collider),
+    rigid_bodies : Component_Store(components.Rigid_Body),
 }
 
 // Holds references to the components and their associated entities for the ECS system.
@@ -25,3 +27,4 @@ Component_Store :: struct($T : typeid) {
     entities : [dynamic]Entity, // paralell array of owning entities 
     index_of : map[Entity]int // Lookup from entity to index
 }
+

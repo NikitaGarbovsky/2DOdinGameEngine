@@ -5,6 +5,7 @@ import "../engine/components"
 import "../engine/editorimgui"
 import "../engine/tilemap"
 import "../engine/renderdata"
+import "../engine/physics"
 import math "core:math/linalg"
 import "core:fmt"
 
@@ -24,12 +25,15 @@ ToggleAppMode :: proc(_app : ^AppState) {
 }
 
 EnterPlaymode :: proc(_app : ^AppState) {
-    fmt.println("Entering playmode...")
-    
     tilemap.ShutdownLevelEditorState(&_app.level)
     editorimgui.ShutdownEditorImgui()
 
+    fmt.println("Entering playmode...")
     SpawnPlayer(_app)
+
+    built := physics.BuildTilemapWallCollision(&_app.physics_world, &_app.level)
+    fmt.println("Built wall collision:", built)
+    
     _app.mode = .Playmode
 }
 
@@ -41,6 +45,11 @@ EnterEditormode :: proc(_app : ^AppState) {
     tilemap.InitLevelEditorState(&_app.level, &_app.renderer)
 	InitFrameStats(&_app.stats)
 
+    if _app.play_state.has_player {
+        physics.DestroyBodyForEntity(&_app.physics_world, _app.play_state.player_entity)
+    }
+
+    physics.DestroyTilemapWallCollision(&_app.physics_world)
     // #TODO: probably change this to not destroy the player when returning to editor mode,
     // for editor functionality, probably want to user to choose whether to start the "level"
     // over again explicitly, rather than just resetting like this.
@@ -91,6 +100,44 @@ SpawnPlayer :: proc(_app : ^AppState) {
         },
         .Transform
     )
+
+    ecs.AddComponentToEntityWorld(
+        &_app.world,
+        &_app.world.colliders,
+        playerEntity,
+        components.Collider{
+            shape = .Box,
+            half_extends = {10, 8},
+            radius = 0,
+            is_trigger = false,
+        },
+        .Collider,
+    )
+
+    ecs.AddComponentToEntityWorld(
+        &_app.world,
+        &_app.world.rigid_bodies,
+        playerEntity,
+        components.Rigid_Body{
+            body_type = .Dynamic,
+            fixed_rotation = true,
+            linear_damping = 8.0,
+            gravity_scale = 0.0,
+        },
+        .Rigid_Body,
+    )
+
+    transform, ok0 := ecs.GetComponent(&_app.world.transforms, _app.play_state.player_entity); assert(ok0)
+    rb, ok1 := ecs.GetComponent(&_app.world.rigid_bodies, _app.play_state.player_entity); assert(ok1)
+    col, ok2 := ecs.GetComponent(&_app.world.colliders, _app.play_state.player_entity); assert(ok2)
+    created := physics.CreateBodyForEntity(
+        &_app.physics_world,
+        _app.play_state.player_entity,
+        transform,
+        rb,
+        col,
+    )
+    fmt.println("Created player physics body:", created)
 }
 
 DestroyPlayer :: proc(_app : ^AppState) {

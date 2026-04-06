@@ -4,6 +4,7 @@ import sdl "vendor:sdl3"
 import "../renderer"
 import "../assets"
 import "../renderdata"
+import "core:strings"
 
 ///
 /// Initializes the tilemap editor, primarily the palette.
@@ -99,6 +100,13 @@ RegisterTileDefFromPaletteEntry :: proc(
         f32(_entry.src_px.y + _entry.src_px.h) / f32(_texture_h),
     }
 
+    // Assign correct collision type to walls based off its label
+    // #TODO: this string lit comparison is kind of bad, but it'll do for now
+    collisionkind : Collision_Kind
+    name := _entry.label
+    if strings.contains(name, "Wall") {collisionkind = .Full_Diamond}
+    else {collisionkind = .None}
+
     def_id := RegisterTileDef(&_level.defsLibrary, &Tile_Definition{
         key = _entry.key,
         texture = _texture,
@@ -108,7 +116,7 @@ RegisterTileDefFromPaletteEntry :: proc(
         size = _entry.world_size,
         origin = _entry.origin,
         layer = 0,
-        collision = .None,
+        collision = collisionkind,
     })
 
     return def_id

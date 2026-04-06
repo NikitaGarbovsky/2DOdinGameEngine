@@ -3,8 +3,16 @@ package systems
 import "../input"
 import "../ecs"
 import "../renderer"
-import "../tilemap"
-import math "core:math"
+import linalg "core:math/linalg"
+import "../physics"
+
+/// A system is a smaller alotment of functionality that is run by main application within it's main loop.
+
+///
+/// Manages the playmode updates when playing the game.
+///
+
+
 
 Play_Mode_Context :: struct {
     input_state : ^input.InputState,
@@ -14,31 +22,26 @@ Play_Mode_Context :: struct {
     player_entity : ecs.Entity,
     has_player : bool,
     move_speed : f32,
+    physics_world : ^physics.PhysicsWorld,
 }
 
-// Updates the player position based off input #TODO: this is screenspace movement, which is not that great. 
-RenderPlayMode :: proc(_context : Play_Mode_Context) {
+// Updates the player position based off input 
+UpdatePlayMode :: proc(_context : Play_Mode_Context) {
     transform, ok := ecs.GetComponent(&_context.entity_world.transforms, _context.player_entity)
     if !ok do return
 
-    move := [2]f32{0, 0}
+    move_dir : linalg.Vector2f32 = {0, 0}
 
-    if _context.input_state.move_up do move[1] -= 1
-    if _context.input_state.move_down do move[1] += 1
-    if _context.input_state.move_left do move[0] -= 1
-    if _context.input_state.move_right do move[0] += 1
+    // Add velocity based off input
+    if _context.input_state.move_left do move_dir.x -= 1
+    if _context.input_state.move_right do move_dir.x += 1
+    if _context.input_state.move_up do move_dir.y -= 1
+    if _context.input_state.move_down do move_dir.y += 1
 
-    if move[0] != 0 || move[1] != 0 {
-        len_sq := move[0] * move[0] + move[1] * move[1]
-        if len_sq > 0 {
-            inv_len := 1.0 / math.sqrt(len_sq)
-            move[0] *= inv_len
-            move[1] *= inv_len
-        }
-
-        transform.pos.x += move[0] * _context.move_speed * _context.frame_stats.deleta_seconds
-        transform.pos.y += move[1] * _context.move_speed * _context.frame_stats.deleta_seconds
+    if move_dir.x != 0 || move_dir.y != 0 {
+        move_dir = linalg.normalize(move_dir)
     }
 
-    _context.renderer.camera.position = transform.pos
+    vel := move_dir * _context.move_speed
+    physics.SetLinearVelocity(_context.physics_world, _context.player_entity, vel)
 }

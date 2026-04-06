@@ -9,6 +9,7 @@ import "../platform"
 import "../engine/tilemap"
 import "../engine/input"
 import "../engine/systems"
+import "../engine/physics"
 
 default_context : runtime.Context // #TODO: hook this up with sdl platform
 
@@ -23,6 +24,7 @@ AppState :: struct {
 
     mode : App_Mode,
     play_state : Play_State,
+    physics_world : physics.PhysicsWorld,
 }
 appState : AppState
 

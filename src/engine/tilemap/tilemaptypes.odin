@@ -48,11 +48,15 @@ Tile_Coord :: struct {
     y : i32,
 }
 
-// #TODO: Use when implementing tile collision.
 Collision_Kind :: enum u8 {
     None,
     Full_Diamond,
-    Polygon,
+    Polygon, // #TODO: not in use currently, maybe in future if I want to customize collision per tile/wall etc..
+}
+
+Tilemap_Collision_State :: struct {
+    built : bool,
+    wall_body : u32,
 }
 
 TILEMAP_LAYER_COUNT :: 3
@@ -99,6 +103,7 @@ Tilemap_Shared_Resources :: struct {
     tile_h : f32,
 }
 
+// BIG FAT STRUCT holding all the editor state #TODO: maybe move this to editor files?
 Tilemap_Editor_State :: struct {
     enabled : bool,
     mode : Edit_Mode,

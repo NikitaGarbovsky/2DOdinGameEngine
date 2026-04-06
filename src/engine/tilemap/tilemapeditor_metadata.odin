@@ -1,7 +1,7 @@
 package tilemap
 
 import "core:encoding/json"
-import "core:os/os2" // #TODO: if upgrading odin version, this is deprecated, prepare for breaking
+import "core:os" 
 import "core:log"
 import "core:fmt"
 
@@ -54,7 +54,7 @@ SaveTileOriginOverrides :: proc(_level : ^Level_State) {
     }
     defer delete(data)
 
-    write_err := os2.write_entire_file(_level.resources.tileset_meta_path, data)
+    write_err := os.write_entire_file(_level.resources.tileset_meta_path, data)
     if write_err != nil {
         // #TODO: add in engine console output here.
         log.debugf("Failed to write to origins file")
@@ -66,7 +66,7 @@ SaveTileOriginOverrides :: proc(_level : ^Level_State) {
 LoadTileOriginOverrides :: proc(_level : ^Level_State) {
     if len(_level.resources.tileset_meta_path) == 0 do return
 
-    data, read_err := os2.read_entire_file_from_path(_level.resources.tileset_meta_path, context.temp_allocator) // #TODO: CLEAR THIS, ALLOCATING MEMORY!
+    data, read_err := os.read_entire_file_from_path(_level.resources.tileset_meta_path, context.temp_allocator) // #TODO: CLEAR THIS, ALLOCATING MEMORY!
     if read_err != nil {
         // Missing file is fine on first run
         return

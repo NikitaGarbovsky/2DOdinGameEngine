@@ -58,26 +58,26 @@ RenderEditorMode :: proc(_context : Editor_Mode_Context) {
 
         tilemap.DrawEditorUI(_context.level_state)
         
-        if _context.level_state.editor.palette_open { // Only enable if tilepalette in editor is open.
-            // Capture any ui input first, before anything else
-            ui_capture := editorimgui.GetInputCapture()
-            editor_input := tilemap.Tilemap_Editor_Input{
-                mouse_screen = { _context.input_state.mouse_x, _context.input_state.mouse_y},
+        // Capture any ui input first, before anything else
+        ui_capture := editorimgui.GetInputCapture()
+        editor_input := tilemap.Tilemap_Editor_Input{
+                mouse_screen_pos = { _context.input_state.mouse_x, _context.input_state.mouse_y},
                 mouse_delta = { _context.input_state.mouse_dx, _context.input_state.mouse_dy},
                 mouse_scroll_down = _context.input_state.mouse_scroll_down,
                 mouse_scroll_up =  _context.input_state.mouse_scroll_up,
 
-                left_clicked =  _context.input_state.left_pressed && !ui_capture.mouse,
-                right_down =  _context.input_state.right_down,
-                delete_pressed =  _context.input_state.delete_pressed && !ui_capture.keyboard,
                 space_down =  _context.input_state.space_down,
-                mouse_captured = ui_capture.mouse,
-                keyboard_captured = ui_capture.keyboard,}
-
-            // Do tilemap frame-dependant editor updates 
-            tilemap.UpdateEditor(_context.level_state, &_context.renderer.camera, editor_input)
+                right_down =  _context.input_state.right_down,
+                imgui_mouse_captured = ui_capture.mouse,
+                imgui_keyboard_captured = ui_capture.keyboard,}
+        // Only enable if tilepalette in editor is open.
+        if _context.level_state.editor.palette_open { 
+            editor_input.left_clicked = _context.input_state.left_pressed && !ui_capture.mouse
+            editor_input.delete_pressed = _context.input_state.delete_pressed && !ui_capture.keyboard
         }
-    
+        // Do tilemap frame-dependant editor updates 
+        tilemap.UpdateEditorBasedOnInput(_context.level_state, &_context.renderer.camera, editor_input)
+        
         // Finalize + upload imgui buffers BEFORE any render pass, has to occur here.
         imgui_draw_data = editorimgui.EditorImgui_Prepare(_context.renderer.cmd_buf)
 }

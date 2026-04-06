@@ -2,6 +2,9 @@ package ecs
 
 import components "../components"
 
+// #TODO: do commenting for this file
+
+// Initializes all component maps, allocates memory for them.
 Init :: proc(_world : ^EntityWorld) {
     _world.next_entity = 0
     _world.alive = make(map[Entity]bool)
@@ -10,6 +13,8 @@ Init :: proc(_world : ^EntityWorld) {
     _world.transforms.index_of = make(map[Entity]int)
     _world.sprites.index_of = make(map[Entity]int) 
     _world.names.index_of = make(map[Entity]int)
+    _world.colliders.index_of = make(map[Entity]int)
+    _world.rigid_bodies.index_of = make(map[Entity]int) 
 }
 
 CreateEntity :: proc (_world : ^EntityWorld) -> Entity {
@@ -30,7 +35,8 @@ DeleteEntity :: proc(_world : ^EntityWorld, _entityToDelete : Entity) {
     RemoveComponent(&_world.transforms, _entityToDelete)
     RemoveComponent(&_world.sprites, _entityToDelete)
     RemoveComponent(&_world.names, _entityToDelete)
-    // #TODO: Add other component stores when implemented.(colliders etc)
+    RemoveComponent(&_world.colliders, _entityToDelete)
+    RemoveComponent(&_world.rigid_bodies, _entityToDelete)
 
     delete_key(&_world.alive, _entityToDelete)
     delete_key(&_world.componentSignatures, _entityToDelete)

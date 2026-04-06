@@ -12,19 +12,19 @@ import "core:strings"
 
 // Object containing editor tilemap input state
 Tilemap_Editor_Input :: struct {
-    mouse_screen : [2]f32,
-    mouse_delta  : [2]f32,
-    mouse_scroll_up : f32,
-    mouse_scroll_down : f32,
+    mouse_screen_pos : [2]f32, // Mouse screen space position
+    mouse_delta : [2]f32, // Mouse movement difference
+    mouse_scroll_up : f32, // Zoom in
+    mouse_scroll_down : f32, // Zoom out
 
-    left_clicked   : bool,
-    right_down     : bool,
+    left_clicked : bool, // Tile paint
+    right_down : bool, // Hold to move
 
-    delete_pressed   : bool,
-    space_down       : bool,
+    delete_pressed : bool, // Toggle tile delete mode
+    space_down : bool, // Hold with right click to move
 
-    mouse_captured    : bool,
-    keyboard_captured : bool,
+    imgui_mouse_captured : bool, // Imgui mouse over
+    imgui_keyboard_captured : bool, // Imgui keyboard input
 }
 
 
@@ -411,9 +411,10 @@ DrawPaletteTileButton :: proc(
     }
 }
 
-UpdateEditor :: proc(
+// Utilizes user input to update & execute editor functionality
+UpdateEditorBasedOnInput :: proc(
     _level : ^Level_State,
-    _cam   : ^renderdata.Camera2D,
+    _cam : ^renderdata.Camera2D,
     _input : Tilemap_Editor_Input,
 ) {
     if !_level.editor.enabled {
@@ -421,7 +422,8 @@ UpdateEditor :: proc(
         return
     }
 
-    if !_input.keyboard_captured && _input.delete_pressed {
+    // Enable delete tile mode 
+    if !_input.imgui_keyboard_captured && _input.delete_pressed {
         if _level.editor.mode == .Delete {
             _level.editor.mode = .Paint
         } else {
@@ -429,24 +431,29 @@ UpdateEditor :: proc(
         }
     }
 
+    // Updates camera positioning
     if UpdateEditorCameraPan(_cam, _input) {
         _level.editor.has_hovered_cell = false
         return
     }
 
-    if _input.mouse_captured {
+    // Don't display the tile hover ghost if ui has input captured 
+    if _input.imgui_mouse_captured {
         _level.editor.has_hovered_cell = false
         return
     }
 
-    world_pos := renderdata.ScreenToWorldPos(_cam, _input.mouse_screen)
+    // Conversions 
+    world_pos := renderdata.ScreenToWorldPos(_cam, _input.mouse_screen_pos)
     hovered := WorldToIsoGridCoordinate(world_pos, _level.resources.tile_w, _level.resources.tile_h)
 
+    // Apply hovered tile positioning
     _level.editor.hovered_cell = hovered
     _level.editor.has_hovered_cell = true
 
     active_tmap := GetTilemapForLayer(_level, _level.editor.selected_layer)
     
+    // Place or Delete the tile on the tilemap 
     if _input.left_clicked {
         switch _level.editor.mode {
         case .Paint:
@@ -460,7 +467,6 @@ UpdateEditor :: proc(
     }
 
     if _input.mouse_scroll_up > 0{
-        
         renderdata.CameraZoomIn(_cam, _input.mouse_scroll_up)
         //log.debug("Zoom In: ", _cam.zoom)
     }
@@ -471,31 +477,39 @@ UpdateEditor :: proc(
     } 
 }
 
+// Updates the editor camera position based off user input per update loop. 
 UpdateEditorCameraPan :: proc(
-    _cam   : ^renderdata.Camera2D,
+    _cam : ^renderdata.Camera2D,
     _input : Tilemap_Editor_Input,
 ) -> bool {
+    // No input detected? Don't do anything
     if !_input.space_down do return false
     if !_input.right_down do return false
-    if _input.mouse_captured do return false
+    if _input.imgui_mouse_captured do return false
 
+    // No mouse movement detected, no need to update further
     if _input.mouse_delta[0] == 0 && _input.mouse_delta[1] == 0 {
         return true
     }
+    // ============ Input detected ============
 
+    // Calculate the previous mouse position
     prev_mouse := [2]f32{
-        _input.mouse_screen[0] - _input.mouse_delta[0],
-        _input.mouse_screen[1] - _input.mouse_delta[1],
+        _input.mouse_screen_pos[0] - _input.mouse_delta[0],
+        _input.mouse_screen_pos[1] - _input.mouse_delta[1],
     }
 
+    // Conversion
     world_prev := renderdata.ScreenToWorldPos(_cam, prev_mouse)
-    world_curr := renderdata.ScreenToWorldPos(_cam, _input.mouse_screen)
+    world_curr := renderdata.ScreenToWorldPos(_cam, _input.mouse_screen_pos)
 
+    // Delta (mouse movement difference)
     delta := [2]f32{
         world_prev[0] - world_curr[0],
         world_prev[1] - world_curr[1],
     }
 
+    // Update camera position 
     _cam.position[0] += delta[0]
     _cam.position[1] += delta[1]
 
