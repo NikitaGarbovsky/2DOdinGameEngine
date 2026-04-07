@@ -5,7 +5,7 @@ import glm "core:math/linalg/glsl"
 ///
 /// Bunch of helpers to manage 2D Camera functionality
 ///
-
+// #TODO: comment this 
 
 // Used by input mouse scroll
 CameraZoomIn :: proc(_cam : ^Camera2D, _delta : f32) {

@@ -5,6 +5,8 @@ import "core:log"
 import assets "../assets"
 import renderdata "../renderdata"
 
+// #TODO: comment this 
+
 CreateSampler :: proc(_renderer : ^Renderer, _info : sdl.GPUSamplerCreateInfo) -> (renderdata.Sampler_Handle, bool) {
     gpu_sampler := sdl.CreateGPUSampler(_renderer.gpu, _info)
     if gpu_sampler == nil {
@@ -142,7 +144,8 @@ CreateTextureFromImage :: proc(_renderer : ^Renderer, _image : assets.Image_Data
     return CreateTextureRGBA8(_renderer, _image.pixels[:], _image.width, _image.height)
 }
 
-// =============== Fallbacks that I might remove at some stage as they might not be needed ===============
+// Creates the renderer's built-in default sampler and 1x1 white texture, configured.
+// These are used as fallback resources when no sampler or texture is assigned.
 CreateDefaultTextureAndSampler :: proc(_renderer : ^Renderer) -> bool {
     sampler_handle, ok := CreateSampler(_renderer, sdl.GPUSamplerCreateInfo{
         min_filter = .NEAREST,
@@ -170,7 +173,7 @@ CreateDefaultTextureAndSampler :: proc(_renderer : ^Renderer) -> bool {
 
     return true
 }
-
+// =============== Fallbacks that I might remove at some stage as they might not be needed ===============
 // Creates a placeholder texture, #TODO: might use this as a fallback if texture fails to load
 CreateCheckerTexture2x2 :: proc(_renderer : ^Renderer) -> (renderdata.Texture_Handle, bool) {
     pixels := []u8{

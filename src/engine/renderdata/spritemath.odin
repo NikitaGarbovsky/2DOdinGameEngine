@@ -2,6 +2,8 @@ package renderdata
 
 import glm "core:math/linalg/glsl"
 
+// #TODO: comment this 
+
 MakeSpriteModelMatrix :: proc(pos : [2]f32,
 size : [2]f32, origin : [2]f32, rot : f32, layer : f32) -> glm.mat4 {
     t_world := glm.mat4Translate({pos[0], pos[1], layer})

@@ -6,6 +6,8 @@ import "core:log"
 import math "core:math/linalg"
 import glm "core:math/linalg/glsl"
 
+// #TODO: comment this 
+
 Init :: proc(_renderer : ^Renderer, _platform : ^platform.Platform, _vert_code, _frag_code : []u8) -> bool {
     _renderer.gpu = _platform.gpu
     _renderer.window = _platform.window

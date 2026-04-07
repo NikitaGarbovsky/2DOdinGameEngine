@@ -2,6 +2,8 @@ package ecs
 
 import components "../components"
 
+// #TODO: comment this 
+
 Entity :: struct {
     id : u32
     // #TODO: might want to add other information about entities when they're created, generation, reason for creation etc.
@@ -28,3 +30,10 @@ Component_Store :: struct($T : typeid) {
     index_of : map[Entity]int // Lookup from entity to index
 }
 
+Entity_Animation_State :: struct {
+    move_x : f32,
+    move_y : f32,
+    grounded : bool,
+    facing_left : bool,
+    attacking : bool,
+}

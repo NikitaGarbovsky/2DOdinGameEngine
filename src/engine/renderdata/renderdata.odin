@@ -2,6 +2,8 @@ package renderdata
 
 import glm "core:math/linalg/glsl"
 
+// #TODO: comment this 
+
 Camera2D :: struct {
     position : glm.vec2, // world-space center of the camera
     zoom : f32, // 1 = default, 2 = zoom in, 0.5 = zoom out

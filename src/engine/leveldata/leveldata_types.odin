@@ -1,5 +1,7 @@
 package leveldata
 
+// #TODO: comment this 
+
 Level_File :: struct {
     version : u32,
     tile_layers : [dynamic]Tile_Layer_Data, 

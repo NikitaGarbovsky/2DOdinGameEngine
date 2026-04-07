@@ -4,6 +4,8 @@ import sdl "vendor:sdl3"
 import "base:runtime"
 import "core:log"
 
+// #TODO: comment this 
+
 Platform :: struct {
     window : ^sdl.Window,
     gpu : ^sdl.GPUDevice,

@@ -2,6 +2,9 @@ package components
 
 import math "core:math/linalg"
 import renderdata "../renderdata"
+import "../animation"
+
+// #TODO: comment this 
 
 Component_Flag :: enum u16 {
     Name, 
@@ -77,3 +80,7 @@ Trigger :: struct {
 Script :: struct {
 
 }
+
+Animator :: struct {
+    player : animation.Animation_Player
+} 

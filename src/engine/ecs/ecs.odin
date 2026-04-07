@@ -96,3 +96,4 @@ GetComponent :: proc(_compStore : ^Component_Store($T), _entity : Entity) -> (^T
 
     return &_compStore.data[idx], true
 }
+

@@ -6,6 +6,8 @@ import "core:sync"
 import "base:runtime"
 import "core:strings"
 
+// #TODO: comment this 
+
 LEVEL_FILE_SUFFIX :: ".level.json"
 
 level_file_filters := [1]sdl.DialogFileFilter{

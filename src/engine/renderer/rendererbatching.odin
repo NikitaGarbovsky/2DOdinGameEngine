@@ -5,6 +5,9 @@ import sdl "vendor:sdl3"
 import renderdata "../renderdata"
 import "core:fmt"
 
+// #TODO: comment this 
+
+
 /// Comparison used when sorting render items before batching.
 // 1. Render pass first
 // 2. Then broad render layer (ground, depth-sorted world(isometric walls, player etc) atm)

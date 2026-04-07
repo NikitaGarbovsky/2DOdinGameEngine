@@ -4,6 +4,8 @@ import "core:log"
 import "core:strings"
 import stbi "vendor:stb/image"
 
+// #TODO: comment this 
+
 Image_Pixel_Format :: enum u8 {
     RGBA8,
 }

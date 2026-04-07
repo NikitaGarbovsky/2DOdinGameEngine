@@ -6,6 +6,8 @@ import sdl "vendor:sdl3"
 import glm "core:math/linalg/glsl"
 import renderdata "../renderdata"
 
+// #TODO: comment this 
+
 Renderer :: struct {
     gpu : ^sdl.GPUDevice,
     window : ^sdl.Window,

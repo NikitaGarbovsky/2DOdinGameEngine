@@ -5,7 +5,8 @@ import omath "core:math"
 import "../components"
 import "../renderdata"
 import "../tilemap"
-import "../editorimgui"
+
+// #TODO: comment this 
 
 @private
 RectOverlaps :: proc(_a, _b : renderdata.Rect2D) -> bool {
