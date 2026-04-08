@@ -6,6 +6,7 @@ import "../engine/editorimgui"
 import "../engine/tilemap"
 import "../engine/renderdata"
 import "../engine/physics"
+import "../engine/animation"
 import math "core:math/linalg"
 import "core:fmt"
 
@@ -27,6 +28,11 @@ ToggleAppMode :: proc(_app : ^AppState) {
 EnterPlaymode :: proc(_app : ^AppState) {
     tilemap.ShutdownLevelEditorState(&_app.level)
     editorimgui.ShutdownEditorImgui()
+    animation_player : animation.Animation_Player
+    animation_player.current_clip = animation.player_anim_bank.animation_clips[8]
+    animation_player.per_frame_time = 0.2
+    animation_player.current_clip.looping = true
+    _app.play_state.animation_player = animation_player
 
     fmt.println("Entering playmode...")
     SpawnPlayer(_app)

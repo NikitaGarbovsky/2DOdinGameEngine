@@ -10,6 +10,7 @@ import "../engine/tilemap"
 import "../engine/input"
 import "../engine/systems"
 import "../engine/physics"
+import "../engine/animation"
 
 default_context : runtime.Context // #TODO: hook this up with sdl platform
 
@@ -38,7 +39,8 @@ editorContext : systems.Editor_Mode_Context
 Play_State :: struct {
     player_entity : ecs.Entity,
     has_player : bool,
-    move_speed : f32
+    move_speed : f32,
+    animation_player : animation.Animation_Player
 }
 
 InitFrameStats :: proc(_stats : ^systems.Frame_Stats) {

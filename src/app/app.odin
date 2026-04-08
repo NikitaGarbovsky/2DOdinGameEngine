@@ -9,6 +9,7 @@ import "../engine/renderdata"
 import "../engine/editorimgui"
 import "../engine/input"
 import "../engine/physics"
+import "../engine/animation"
 
 ///
 /// This is the main connecting manager of the engine. It connects windowing, rendering and editor 
@@ -31,6 +32,7 @@ Init :: proc(_app : ^AppState) {
 	tilemap.InitLevelState(&_app.level,64,32)
 	tilemap.InitCaveTileResources(&_app.level, &_app.renderer)
 	physics.Init(&_app.physics_world)
+	animation.LoadEntityAnimations(&_app.renderer)
 
 	// Starting camera values
 	_app.renderer.camera.position = {960, 540}
@@ -82,7 +84,8 @@ Run :: proc(_app : ^AppState) {
 						player_entity = _app.play_state.player_entity,
 						has_player = _app.play_state.has_player,
 						move_speed = _app.play_state.move_speed,
-						physics_world = &_app.physics_world
+						physics_world = &_app.physics_world,
+						animation_player = &_app.play_state.animation_player
 				}
 				systems.UpdatePlayMode(playContext)
 				physics.Step(&_app.physics_world, _app.stats.deleta_seconds)

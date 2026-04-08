@@ -5,6 +5,7 @@ import "../ecs"
 import "../renderer"
 import linalg "core:math/linalg"
 import "../physics"
+import "../animation"
 
 /// A system is a smaller alotment of functionality that is run by main application within it's main loop.
 
@@ -12,7 +13,7 @@ import "../physics"
 /// Manages the playmode updates when playing the game.
 ///
 
-
+// #TODO: Comment this.
 
 Play_Mode_Context :: struct {
     input_state : ^input.InputState,
@@ -23,10 +24,39 @@ Play_Mode_Context :: struct {
     has_player : bool,
     move_speed : f32,
     physics_world : ^physics.PhysicsWorld,
+    animation_player : ^animation.Animation_Player,
 }
 
 // Updates the player position based off input 
 UpdatePlayMode :: proc(_context : Play_Mode_Context) {
+
+    sprite, ok0 := ecs.GetComponent(&_context.entity_world.sprites, _context.player_entity)
+
+
+    _context.animation_player.frame_timer += _context.frame_stats.deleta_seconds
+
+    if _context.animation_player.frame_timer >= _context.animation_player.per_frame_time {
+    _context.animation_player.frame_timer = 0
+    _context.animation_player.current_frame += 1
+
+    if _context.animation_player.current_frame >= len(_context.animation_player.current_clip.frames) {
+        if _context.animation_player.current_clip.looping {
+            _context.animation_player.current_frame = 0
+        } else {
+            _context.animation_player.current_frame = len(_context.animation_player.current_clip.frames) - 1
+            _context.animation_player.playing = false
+            
+        }
+    }
+
+    frame := _context.animation_player.current_clip.frames[_context.animation_player.current_frame]
+    sprite.texture = _context.animation_player.current_clip.texture
+    sprite.size = frame.size
+    sprite.uv_min = frame.uv_min
+    sprite.uv_max = frame.uv_max
+}
+    
+
     transform, ok := ecs.GetComponent(&_context.entity_world.transforms, _context.player_entity)
     if !ok do return
 
