@@ -58,19 +58,18 @@ LoadSpriteSheets :: proc(
     {
     length := len(_spriteSheet)
 
-    for death_sheet_path, i in _spriteSheet {
-        image, ok := assets.LoadImageFile(death_sheet_path); assert(ok)
+    for sprite_sheet_path, i in _spriteSheet {
+        image, ok := assets.LoadImageFile(sprite_sheet_path); assert(ok)
         defer assets.DestroyImage(&image)
 
         tex, ok2 := renderer.CreateTextureFromImage(_renderer, image); assert(ok2)
         
         animclip : Animation_Clip
-        
         animclip.texture = tex
 
         animclip.looping = false
 
-        parts := strings.split(death_sheet_path, "/")
+        parts := strings.split(sprite_sheet_path, "/")
         defer delete(parts)
         endpart := parts[len(parts) - 1]
 
@@ -79,7 +78,7 @@ LoadSpriteSheets :: proc(
 
         animclip.name = endpart
 
-        animclip.source_path = death_sheet_path
+        animclip.source_path = sprite_sheet_path
 
         animclip.frames = make([]Animation_Frame, _frameCount)
         for k := 0; k < _frameCount; k += 1 {

@@ -40,6 +40,8 @@ Init :: proc(_app : ^AppState) {
 
 	// Default to editor mode, also initializes editor.
 	EnterEditormode(_app) 
+
+	tilemap.LoadLevelFromPath(&_app.level, "Resources/Levels/level1.level.json")
 }
 
 // Runs the main loop of the application, depending on the current app state.
