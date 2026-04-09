@@ -7,6 +7,7 @@ import "../engine/tilemap"
 import "../engine/renderdata"
 import "../engine/physics"
 import "../engine/animation"
+import "../engine/systems"
 import math "core:math/linalg"
 import "core:fmt"
 
@@ -41,9 +42,11 @@ EnterPlaymode :: proc(_app : ^AppState) {
     fmt.println("Built wall collision:", built)
     
     _app.mode = .Playmode
+    systems.InitializePlayMode()
 }
 
 EnterEditormode :: proc(_app : ^AppState) {
+    systems.ShutdownPlayMode()
     fmt.println("Entering editormode...")
 
 	editorimgui.InitEditorImgui(_app.platform.window, _app.renderer.gpu, _app.renderer.swapchain_color_format, ._1)

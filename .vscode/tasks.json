@@ -103,7 +103,7 @@
           "-collection:libs=./libs",
           "-collection:Dependencies=Dependencies",
           "-out:./Build/Debug/2DOdinGameEngine.exe",
-          "-extra-linker-flags:/LIBPATH:libs imgui_windows_x64.lib user32.lib gdi32.lib shell32.lib kernel32.lib"
+          "-extra-linker-flags:/LIBPATH:libs lua54dll.lib imgui_windows_x64.lib user32.lib gdi32.lib shell32.lib kernel32.lib"
       ],
       "options": { "cwd": "${workspaceFolder}" },
       "dependsOn": ["(Shaders) Compile all"],

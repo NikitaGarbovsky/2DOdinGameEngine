@@ -89,7 +89,7 @@ Run :: proc(_app : ^AppState) {
 						physics_world = &_app.physics_world,
 						animation_player = &_app.play_state.animation_player
 				}
-				systems.UpdatePlayMode(playContext)
+				systems.UpdatePlayMode(&playContext)
 				physics.Step(&_app.physics_world, _app.stats.deleta_seconds)
 				physics.SyncTransformsFromPhysics(&_app.physics_world, &_app.world)
 

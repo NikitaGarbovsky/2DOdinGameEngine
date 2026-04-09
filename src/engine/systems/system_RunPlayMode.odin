@@ -1,5 +1,6 @@
 package systems
 
+import "core:time"
 import "../input"
 import "../ecs"
 import "../renderer"
@@ -7,6 +8,9 @@ import linalg "core:math/linalg"
 import "../physics"
 import "../animation"
 import "core:fmt"
+import lua "vendor:lua/5.4"
+import "core:os"
+import "core:strings"
 
 /// A system is a smaller alotment of functionality that is run by main application within it's main loop.
 
@@ -28,11 +32,50 @@ Play_Mode_Context :: struct {
     animation_player : ^animation.Animation_Player,
 }
 
+L : ^lua.State
+speed : f32
+last_write_time : time.Time
+script_path : cstring = "Resources/scripts/movement.lua"
+
+InitializePlayMode :: proc() {
+    L = lua.L_newstate()
+    lua.L_openlibs(L)
+    
+    info, _ := os.stat(string(script_path), context.allocator)
+    last_write_time = info.modification_time
+
+    status : = lua.L_dofile(L, script_path)
+    if status != 0 {
+        fmt.printf("Error loading file: %s\n", lua.tostring(L, -1))
+    }
+
+    lua.getglobal(L, "returnMovementSpeed")
+
+    if lua.pcall(L,0,1,0) != 0{
+
+    }
+    speed = f32(lua.tonumber(L, -1))
+
+    lua.pop(L, 1)
+}
 // Updates the player position based off input 
-UpdatePlayMode :: proc(_context : Play_Mode_Context) {
+UpdatePlayMode :: proc(_context : ^Play_Mode_Context) {
     transform, ok := ecs.GetComponent(&_context.entity_world.transforms, _context.player_entity)
     if !ok do return
 
+    if ShouldReloadScript(strings.clone_from_cstring(script_path)) {
+        if lua.L_dofile(L, script_path) == 0 {
+            fmt.println("Lua script hot-reloaded successfully!")
+            lua.getglobal(L, "returnMovementSpeed")
+
+            if lua.pcall(L,0,1,0) != 0{
+
+            }
+            speed = f32(lua.tonumber(L, -1))
+
+            lua.pop(L, 1)
+        }
+    }
     move_dir : linalg.Vector2f32 = {0, 0}
 
     // Add velocity based off input
@@ -45,9 +88,11 @@ UpdatePlayMode :: proc(_context : Play_Mode_Context) {
         move_dir = linalg.normalize(move_dir)
     }
 
+    _context.move_speed = speed
     vel := move_dir * _context.move_speed
     physics.SetLinearVelocity(_context.physics_world, _context.player_entity, vel)
 
+    // TODO: this is all very in-efficient and should be ripped out and put somewhere else
     // Set the current clip based off movement direction.
     animation.SetAnimationDirectionFromMovementVelocity(move_dir, _context.animation_player)
     if move_dir == {0,0} { // No movement, set idle
@@ -87,4 +132,23 @@ UpdatePlayMode :: proc(_context : Play_Mode_Context) {
         sprite.uv_max = frame.uv_max
         sprite.origin = frame.origin
     }
+
+}
+
+ShutdownPlayMode :: proc() {
+    if L != nil {
+        lua.close(L)
+    }
+}
+
+ShouldReloadScript :: proc(_filename : string) -> bool {
+    info, err := os.stat(_filename, context.allocator)
+    if err != os.ERROR_NONE do return false
+
+    if time.diff(last_write_time, info.modification_time) > 0 {
+        last_write_time = info.modification_time
+        return true
+    }
+
+    return false
 }
