@@ -30,7 +30,7 @@ EnterPlaymode :: proc(_app : ^AppState) {
     editorimgui.ShutdownEditorImgui()
     animation_player : animation.Animation_Player
     animation_player.current_clip = animation.player_anim_bank.animation_clips[8]
-    animation_player.per_frame_time = 0.1
+    animation_player.per_frame_time = 0.05
     animation_player.current_clip.looping = true
     _app.play_state.animation_player = animation_player
 
@@ -70,7 +70,7 @@ SpawnPlayer :: proc(_app : ^AppState) {
 
     _app.play_state.player_entity = playerEntity
     _app.play_state.has_player = true
-    _app.play_state.move_speed = 180
+    _app.play_state.move_speed = 120
 
     ecs.AddComponentToEntityWorld(
         &_app.world,

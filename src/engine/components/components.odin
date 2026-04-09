@@ -82,5 +82,6 @@ Script :: struct {
 }
 
 Animator :: struct {
-    player : animation.Animation_Player
+    player : animation.Animation_Player,
+    animation_direction : animation.Animation_Direction
 } 

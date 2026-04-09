@@ -34,6 +34,16 @@ Animation_Player :: struct {
     speed : f32,
     just_finished : bool,
     flip_x : bool,
-
+    current_direction : Animation_Direction,
 }
 
+Animation_Direction :: enum u8 {
+    SouthEast,
+    East,
+    NorthEast,
+    North,
+    NorthWest,
+    West,
+    SouthWest,
+    South
+}
