@@ -10,6 +10,7 @@ import "../engine/editorimgui"
 import "../engine/input"
 import "../engine/physics"
 import "../engine/animation"
+import "../engine/scripting"
 
 ///
 /// This is the main connecting manager of the engine. It connects windowing, rendering and editor 
@@ -78,21 +79,24 @@ Run :: proc(_app : ^AppState) {
 				systems.RenderEditorMode(editorContext) 
 			}
 			if _app.mode == .Playmode {
-					playContext := systems.Play_Mode_Context{
-						input_state = &_app.input,
-						frame_stats = &_app.stats,
-						entity_world = &_app.world,
-						renderer = &_app.renderer,
-						player_entity = _app.play_state.player_entity,
-						has_player = _app.play_state.has_player,
-						move_speed = _app.play_state.move_speed,
-						physics_world = &_app.physics_world,
-						animation_player = &_app.play_state.animation_player
-				}
-				systems.UpdatePlayMode(&playContext)
+
+				// Updates gameplay entity Lua scripts.
+				scripting.UpdateLuaScripts(
+					&_app.script_runtime,
+					&_app.world,
+					&_app.physics_world,
+					&_app.input,
+					_app.stats.deleta_seconds,
+				)
+
+				// Physics update
 				physics.Step(&_app.physics_world, _app.stats.deleta_seconds)
 				physics.SyncTransformsFromPhysics(&_app.physics_world, &_app.world)
 
+				// Animation update
+				systems.UpdateAnimators(&_app.world, _app.stats.deleta_seconds)
+
+				// Sets camera #TODO: Add smoothing
 				if transform, ok := ecs.GetComponent(&_app.world.transforms, _app.play_state.player_entity); ok {
 					_app.renderer.camera.position = transform.pos
 				}
@@ -116,4 +120,5 @@ Shutdown :: proc(_app : ^AppState) {
 	renderer.Shutdown(&_app.renderer)
 	platform.Shutdown(&_app.platform)
 	physics.Shutdown(&_app.physics_world)
+	scripting.ShutdownScripting(&_app.script_runtime)
 }

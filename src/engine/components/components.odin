@@ -15,6 +15,7 @@ Component_Flag :: enum u16 {
     Interactable,
     Trigger,
     Script,
+    Animator
 }
 
 // Give the bit pattern for this component type
@@ -33,10 +34,9 @@ Transform :: struct {
 
 Sprite :: struct {
     texture : renderdata.Texture_Handle,
-    // min & max are used to dictate a smaller rect for the sprite to sample from,
-    // for future sprite sheets, animation, optimizations of gpu texture sending etc..
-    // #TODO: Use this for animation when implemented!
+    // Used to dictate a smaller rect for the sprite to sample from a sprite sheet,
     uv_min : [2]f32, 
+    // Used to dictate a smaller rect for the sprite to sample from a sprite sheet,
     uv_max : [2]f32,
     size : math.Vector2f32,
     color : [4]f32, 
@@ -77,11 +77,18 @@ Trigger :: struct {
 
 }
 
+// The script component that runs gameplay logic when attached to an entity
 Script :: struct {
-
+    path : string,
+    enabled : bool,
+    hot_reload : bool,
 }
 
+// Contains the references required to run the animator component
 Animator :: struct {
-    player : animation.Animation_Player,
-    animation_direction : animation.Animation_Direction
+    anim_player : animation.Animation_Player,
+    requested_state : string, // Reference to the anim clip to play
+    current_state : string, // Path to the animation it's currently playing
+    applied_direction : animation.Animation_Direction,
+    bank : ^animation.Animation_Bank,
 } 

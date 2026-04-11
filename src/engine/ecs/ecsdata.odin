@@ -21,6 +21,8 @@ EntityWorld :: struct {
     names : Component_Store(components.Name),
     colliders : Component_Store(components.Collider),
     rigid_bodies : Component_Store(components.Rigid_Body),
+    scripts : Component_Store(components.Script),
+    animators : Component_Store(components.Animator),
 }
 
 // Holds references to the components and their associated entities for the ECS system.

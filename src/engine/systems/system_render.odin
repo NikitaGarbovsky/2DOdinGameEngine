@@ -16,7 +16,7 @@ import "../tilemap"
 
 // Renders all renderable entities & tiles on the tilemap
 RenderWorld :: proc(_world : ^ecs.EntityWorld, _level : ^tilemap.Level_State ,_renderer : ^renderer.Renderer) {
-    // 1. Clear the previously batched items from last frame #TODO: maybe only clear items that have changed?
+    // 1. Clear last frame's render-item list before rebuilding it for this frame.
     clear(&_renderer.sprite_batcher.items)    
 
     // 2. Extract the renderable tilemap & entity data
@@ -25,8 +25,8 @@ RenderWorld :: proc(_world : ^ecs.EntityWorld, _level : ^tilemap.Level_State ,_r
     ExtractEntityRenderItems(_world, _renderer ,&_renderer.sprite_batcher.items)
 
     if _level.editor.palette_open {
-    // (EDITOR DEBUG) Adds the tilemap grid overlay
-    tilemap.ExtractTilemapGridOverlay(
+        // (EDITOR DEBUG) Adds the tilemap grid overlay
+        tilemap.ExtractTilemapGridOverlay(
         _level,
         &_renderer.camera,
         &_renderer.sprite_batcher.items,

@@ -1,7 +1,7 @@
 package leveldata
 
 import "core:encoding/json"
-import os2 "core:os"
+import "core:os"
 import "core:log"
 
 ///
@@ -25,7 +25,7 @@ SaveLevelFile :: proc(_path : string, _file : Level_File) -> bool {
     }
     defer delete(data)
 
-    write_err := os2.write_entire_file(_path,data)
+    write_err := os.write_entire_file(_path,data)
     if write_err != nil {
         log.errorf("SaveLevelFile: failed to write '{}': {}", _path, write_err)
         return false
@@ -35,7 +35,7 @@ SaveLevelFile :: proc(_path : string, _file : Level_File) -> bool {
 }
 
 LoadLevelFile :: proc(_path : string, _allocator := context.allocator) -> (Level_File, bool) {
-    data, read_err := os2.read_entire_file_from_path(_path, _allocator)
+    data, read_err := os.read_entire_file_from_path(_path, _allocator)
     if read_err != nil {
         log.errorf("LoadLevelFile: failed to read '{}': {}", _path, read_err)
         return Level_File{}, false

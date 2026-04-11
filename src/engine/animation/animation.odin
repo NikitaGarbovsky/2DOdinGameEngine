@@ -1,15 +1,15 @@
 package animation
+
 import "../assets"
 import "../renderer"
 import "../renderdata"
 import glm "core:math/linalg"
-import "core:fmt"
-import "core:strings"
 
 // #TODO: comment all this.
 
 
 LoadEntityAnimations :: proc(_renderer : ^renderer.Renderer) {
+    player_anim_bank.directional_sets = make(map[string][8]Animation_Clip)
 
     sprite_death_sheets := [8]string {
     "Resources/Sprites/PlayerCharacter/Death/villager_death_00000_Sheet.png",
@@ -21,7 +21,7 @@ LoadEntityAnimations :: proc(_renderer : ^renderer.Renderer) {
      "Resources/Sprites/PlayerCharacter/Death/villager_death_60000_Sheet.png",
      "Resources/Sprites/PlayerCharacter/Death/villager_death_70000_Sheet.png"}
     
-    LoadSpriteSheets(_renderer, sprite_death_sheets[:], "PlayerDeath", {3600,198}, 16, {0.5, 0.7})
+    LoadSpriteSheets(_renderer,&player_anim_bank ,sprite_death_sheets[:], "PlayerDeath", {3600,198}, 16, {0.5, 0.7})
 
     sprite_walk_sheets := [8]string {
      "Resources/Sprites/PlayerCharacter/Walk/villager_walk_00000-Sheet.png",
@@ -33,7 +33,7 @@ LoadEntityAnimations :: proc(_renderer : ^renderer.Renderer) {
      "Resources/Sprites/PlayerCharacter/Walk/villager_walk_60000-Sheet.png",
      "Resources/Sprites/PlayerCharacter/Walk/villager_walk_70000-Sheet.png"}
 
-    LoadSpriteSheets(_renderer, sprite_walk_sheets[:], "PlayerWalk", {1365, 163}, 15, {0.5, 0.9})
+    LoadSpriteSheets(_renderer,&player_anim_bank ,sprite_walk_sheets[:], "PlayerWalk", {1365, 163}, 15, {0.5, 0.9})
 
     sprite_idle_sheets := [8]string {
      "Resources/Sprites/PlayerCharacter/Idle/villager_idle_00000.png",
@@ -45,20 +45,21 @@ LoadEntityAnimations :: proc(_renderer : ^renderer.Renderer) {
      "Resources/Sprites/PlayerCharacter/Idle/villager_idle_60000.png",
      "Resources/Sprites/PlayerCharacter/Idle/villager_idle_70000.png"}
 
-    LoadSpriteSheets(_renderer, sprite_idle_sheets[:], "PlayerIdle", {225, 198}, 1, {0.5, 0.7})
+    LoadSpriteSheets(_renderer,&player_anim_bank, sprite_idle_sheets[:], "PlayerIdle", {225, 198}, 1, {0.5, 0.7})
 }
 
 // Loads given sprite sheet into the Animation_Bank for use in the application.
 @private
 LoadSpriteSheets :: proc(
     _renderer : ^renderer.Renderer, 
+    _animation_bank : ^Animation_Bank,
     _spriteSheet : []string, 
     _animationLabel : string,
     _size : [2]f32,
     _frameCount : int,
     _origin : [2]f32)
     {
-    length := len(_spriteSheet)
+    directional_clips : [8]Animation_Clip
 
     for sprite_sheet_path, i in _spriteSheet {
         image, ok := assets.LoadImageFile(sprite_sheet_path); assert(ok)
@@ -68,39 +69,24 @@ LoadSpriteSheets :: proc(
         
         animclip : Animation_Clip
         animclip.texture = tex
-
         animclip.looping = false
-
-        parts := strings.split(sprite_sheet_path, "/")
-        defer delete(parts)
-        endpart := parts[len(parts) - 1]
-
-        index := strings.index(endpart, ".")
-        endpart = endpart[:index]
-
-        animclip.name = endpart
-
+        animclip.name = _animationLabel
         animclip.source_path = sprite_sheet_path
-
         animclip.frames = make([]Animation_Frame, _frameCount)
+
         for k := 0; k < _frameCount; k += 1 {
             anim_frame : Animation_Frame
             anim_frame.duration = 0.1
             anim_frame.origin = _origin
 
             frame_w := _size[0] / f32(_frameCount)
-
             anim_frame.size = {frame_w, _size[1]}
-            anim_frame.uv_min[0] = f32(k) / f32(_frameCount) 
-            anim_frame.uv_min[1] = 0
-            anim_frame.uv_max[0] = f32(k + 1) / f32(_frameCount) 
-            anim_frame.uv_max[1] = 1.0
-
+            anim_frame.uv_min = {f32(k) / f32(_frameCount), 0}
+            anim_frame.uv_max = {f32(k + 1) / f32(_frameCount), 1} 
             animclip.frames[k] = anim_frame
         }
-        
-        // Add the clip to the animation bank.
-        append(&player_anim_bank.animation_clips, animclip)
+
+        directional_clips[i] = animclip
 
         // Debugging
         // for clip, i in player_anim_bank.animation_clips {
@@ -113,6 +99,7 @@ LoadSpriteSheets :: proc(
         //     }
         // }
     }
+    _animation_bank.directional_sets[_animationLabel] = directional_clips
 }
 
 SetAnimationDirectionFromMovementVelocity :: proc(_movementDirection : glm.Vector2f32, _animationPlayer : ^Animation_Player) {
@@ -138,36 +125,97 @@ SetAnimationDirectionFromMovementVelocity :: proc(_movementDirection : glm.Vecto
     }
 }
 
-SetAnimationClipBasedOfCurrentDirection :: proc(_animDirection : Animation_Direction, _clip : string) -> Animation_Clip {
-    animationClipRange : [8]Animation_Clip
-    offsetIndex := 0
-    for clip, i in player_anim_bank.animation_clips {
-        if strings.contains(clip.name, _clip) {
-            animationClipRange[i - offsetIndex] = clip
+// Returns the animation clip based off direction
+GetDirectionalClip :: proc(_bank : ^Animation_Bank, _state : string, _animDirection : Animation_Direction) -> (Animation_Clip, bool) {
+    clips, ok := _bank.directional_sets[_state]
+    if !ok do return {}, false
+        
+    return clips[int(_animDirection)], true
+}
+
+// Plays the animation clip for this animation player
+PlayClip :: proc(
+    _anim_player : ^Animation_Player,
+    _clip : Animation_Clip,
+    _looping : bool = true,
+    _force_restart : bool = false,
+) {
+    same_group := _anim_player.current_clip.name == _clip.name
+    same_exact_clip := _anim_player.current_clip.source_path == _clip.source_path
+
+    // Already on this exact clip, just update looping 
+    if same_exact_clip && !_force_restart {
+        _anim_player.current_clip.looping = _looping
+        return
+    }
+
+    // Switching direction within the same state group (e.g. PlayerWalk -> PlayerWalk)
+    // Keeps frame progress instead of restarting from frame 0, makes animation look smooth and continuous :).
+    if same_group && !_force_restart {
+        preserved_frame := _anim_player.current_frame
+        preserved_timer := _anim_player.frame_timer
+
+        _anim_player.current_clip = _clip
+        _anim_player.current_clip.looping = _looping
+
+        if len(_anim_player.current_clip.frames) == 0 {
+            _anim_player.current_frame = 0
+            _anim_player.frame_timer = 0
         } else {
-            offsetIndex += 1
+            if preserved_frame >= len(_anim_player.current_clip.frames) {
+                preserved_frame = len(_anim_player.current_clip.frames) - 1
+            }
+            if preserved_frame < 0 {
+                preserved_frame = 0
+            }
+
+            _anim_player.current_frame = preserved_frame
+            _anim_player.frame_timer = preserved_timer
+        }
+
+        _anim_player.playing = true
+        _anim_player.just_finished = false
+
+        return
+    }
+
+    // Full state change, restart animation
+    _anim_player.current_clip = _clip
+    _anim_player.current_clip.looping = _looping
+    _anim_player.current_frame = 0
+    _anim_player.frame_timer = 0
+    _anim_player.playing = true
+    _anim_player.just_finished = false
+}
+
+// Progresses through the current animation (clip) located on the animation player
+StepAnimationPlayer :: proc(
+    _player : ^Animation_Player,
+    _dt : f32,
+) -> (advanced : bool, frame : Animation_Frame) {
+    if !_player.playing do return false, {}
+    if len(_player.current_clip.frames) == 0 do return false, {}
+
+    _player.frame_timer += _dt * _player.speed
+    _player.just_finished = false
+
+    if _player.frame_timer < _player.per_frame_time {
+        return false, _player.current_clip.frames[_player.current_frame]
+    }
+
+    _player.frame_timer -= _player.per_frame_time
+    _player.current_frame += 1
+    advanced = true
+
+    if _player.current_frame >= len(_player.current_clip.frames) {
+        if _player.current_clip.looping {
+            _player.current_frame = 0
+        } else {
+            _player.current_frame = len(_player.current_clip.frames) - 1
+            _player.playing = false
+            _player.just_finished = true
         }
     }
 
-    switch _animDirection {
-        case .South: // down (south) 
-            return animationClipRange[0]
-        case .SouthEast: // down right (south-east) 
-            return animationClipRange[1]
-        case .East: // right (east) 
-            return animationClipRange[2]
-        case .NorthEast: // right up (north-east) 
-            return animationClipRange[3]
-        case .North: // up (north) 
-            return animationClipRange[4]
-        case .NorthWest: // left up (north-west) 
-            return animationClipRange[5]
-        case .West:// left(west)
-            return animationClipRange[6]
-        case .SouthWest: // left down (south-west) 
-            return animationClipRange[7]
-    }
-
-    return animationClipRange[0]
-    //fmt.printfln("Found {} clips with {} tag", len(animationClipRange), _clip)
+    return true, _player.current_clip.frames[_player.current_frame]
 }

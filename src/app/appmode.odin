@@ -8,6 +8,7 @@ import "../engine/renderdata"
 import "../engine/physics"
 import "../engine/animation"
 import "../engine/systems"
+import "../engine/scripting"
 import math "core:math/linalg"
 import "core:fmt"
 
@@ -29,11 +30,6 @@ ToggleAppMode :: proc(_app : ^AppState) {
 EnterPlaymode :: proc(_app : ^AppState) {
     tilemap.ShutdownLevelEditorState(&_app.level)
     editorimgui.ShutdownEditorImgui()
-    animation_player : animation.Animation_Player
-    animation_player.current_clip = animation.player_anim_bank.animation_clips[8]
-    animation_player.per_frame_time = 0.05
-    animation_player.current_clip.looping = true
-    _app.play_state.animation_player = animation_player
 
     fmt.println("Entering playmode...")
     SpawnPlayer(_app)
@@ -41,12 +37,12 @@ EnterPlaymode :: proc(_app : ^AppState) {
     built := physics.BuildTilemapWallCollision(&_app.physics_world, &_app.level)
     fmt.println("Built wall collision:", built)
     
+    scripting.InitializeScripting(&_app.script_runtime)
     _app.mode = .Playmode
-    systems.InitializePlayMode()
 }
 
 EnterEditormode :: proc(_app : ^AppState) {
-    systems.ShutdownPlayMode()
+    scripting.ShutdownScripting(&_app.script_runtime)
     fmt.println("Entering editormode...")
 
 	editorimgui.InitEditorImgui(_app.platform.window, _app.renderer.gpu, _app.renderer.swapchain_color_format, ._1)
@@ -73,7 +69,6 @@ SpawnPlayer :: proc(_app : ^AppState) {
 
     _app.play_state.player_entity = playerEntity
     _app.play_state.has_player = true
-    _app.play_state.move_speed = 120
 
     ecs.AddComponentToEntityWorld(
         &_app.world,
@@ -83,17 +78,22 @@ SpawnPlayer :: proc(_app : ^AppState) {
         .Name
     )
 
+    // Assign idle clip to player, reference for sprite component bellow,
+    idle_clip, ok_idle := animation.GetDirectionalClip(&animation.player_anim_bank, "PlayerIdle", .South)
+    assert(ok_idle)
+    first_frame := idle_clip.frames[0]
+
     ecs.AddComponentToEntityWorld(
         &_app.world,
         &_app.world.sprites,
         playerEntity,
         components.Sprite{
-            texture = renderdata.Default_Texture_Handle,
-            uv_min  = {0, 0},
-            uv_max  = {1, 1},
-            size    = math.Vector2f32{28, 40},
+            texture = idle_clip.texture,
+            uv_min  = first_frame.uv_min,
+            uv_max  = first_frame.uv_max,
+            size    = first_frame.size / 2,
             color   = {1, 1, 1, 1},
-            origin  = {0.5, 1.0},
+            origin  = first_frame.origin,
             layer   = renderdata.DEPTH_SORT_LAYER,
         },
         .Sprite,
@@ -134,6 +134,42 @@ SpawnPlayer :: proc(_app : ^AppState) {
             gravity_scale = 0.0,
         },
         .Rigid_Body,
+    )
+
+    ecs.AddComponentToEntityWorld(
+        &_app.world,
+        &_app.world.animators,
+        playerEntity,
+        components.Animator{
+            bank = &animation.player_anim_bank,
+            requested_state = "PlayerIdle",
+            current_state = "",
+            applied_direction = .South,
+            anim_player = animation.Animation_Player{
+                current_clip = idle_clip,
+                current_frame = 0,
+                frame_timer = 0,
+                per_frame_time = 0.05, // #TODO: Allow this to be configurable
+                playing = true,
+                speed = 1,
+                just_finished = false,
+                flip_x = false,
+                current_direction = .South,
+            },
+        },
+        .Animator
+    )
+
+    ecs.AddComponentToEntityWorld(
+        &_app.world,
+        &_app.world.scripts,
+        playerEntity,
+        components.Script{
+            path = "Resources/scripts/PlayerMovement.lua", // #TODO: Assign scripts through the editor gui.
+            enabled = true,
+            hot_reload = true,
+        },
+        .Script
     )
 
     transform, ok0 := ecs.GetComponent(&_app.world.transforms, _app.play_state.player_entity); assert(ok0)

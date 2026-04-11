@@ -3,8 +3,13 @@ package animation
 import "../renderdata"
 import glm "core:math/linalg"
 
+///
+/// Contains the type definitions for use throughout the animation system.
+///
+/// #TODO: Comment this.
+
 Animation_Bank :: struct {
-    animation_clips : [dynamic]Animation_Clip,
+    directional_sets : map[string][8]Animation_Clip,
 }
 
 player_anim_bank : Animation_Bank
@@ -38,6 +43,7 @@ Animation_Player :: struct {
 }
 
 Animation_Direction :: enum u8 {
+    South,
     SouthEast,
     East,
     NorthEast,
@@ -45,5 +51,4 @@ Animation_Direction :: enum u8 {
     NorthWest,
     West,
     SouthWest,
-    South
 }

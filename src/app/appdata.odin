@@ -10,7 +10,7 @@ import "../engine/tilemap"
 import "../engine/input"
 import "../engine/systems"
 import "../engine/physics"
-import "../engine/animation"
+import "../engine/scripting"
 
 default_context : runtime.Context // #TODO: hook this up with sdl platform
 
@@ -22,10 +22,10 @@ AppState :: struct {
 	renderer : renderer.Renderer, 
 	stats : systems.Frame_Stats,
     level : tilemap.Level_State,
-
     mode : App_Mode,
     play_state : Play_State,
     physics_world : physics.PhysicsWorld,
+    script_runtime : scripting.Script_Runtime
 }
 appState : AppState
 
@@ -39,8 +39,6 @@ editorContext : systems.Editor_Mode_Context
 Play_State :: struct {
     player_entity : ecs.Entity,
     has_player : bool,
-    move_speed : f32,
-    animation_player : animation.Animation_Player
 }
 
 InitFrameStats :: proc(_stats : ^systems.Frame_Stats) {

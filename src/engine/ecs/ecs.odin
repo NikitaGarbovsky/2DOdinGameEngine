@@ -15,6 +15,8 @@ Init :: proc(_world : ^EntityWorld) {
     _world.names.index_of = make(map[Entity]int)
     _world.colliders.index_of = make(map[Entity]int)
     _world.rigid_bodies.index_of = make(map[Entity]int) 
+    _world.scripts.index_of = make(map[Entity]int)
+    _world.animators.index_of = make(map[Entity]int)
 }
 
 CreateEntity :: proc (_world : ^EntityWorld) -> Entity {
@@ -37,6 +39,8 @@ DeleteEntity :: proc(_world : ^EntityWorld, _entityToDelete : Entity) {
     RemoveComponent(&_world.names, _entityToDelete)
     RemoveComponent(&_world.colliders, _entityToDelete)
     RemoveComponent(&_world.rigid_bodies, _entityToDelete)
+    RemoveComponent(&_world.scripts, _entityToDelete)
+    RemoveComponent(&_world.animators, _entityToDelete)
 
     delete_key(&_world.alive, _entityToDelete)
     delete_key(&_world.componentSignatures, _entityToDelete)
