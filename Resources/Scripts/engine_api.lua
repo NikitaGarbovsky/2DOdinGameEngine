@@ -28,3 +28,15 @@ function GetInputMoveX() end
 ---Returns vertical movement input in the range [-1, 1].
 ---@return number
 function GetInputMoveY() end
+
+---Is called when an entity is interacted with. (Physics point to collider)
+function OnInteract() end
+
+---Called when an entity is flagged for destruction
+function OnDestroy() end
+
+---Runs as fast as it can every update loop of the main application
+---After input, before physics & animation updates
+---@param _entity integer
+---@param _dt number
+function Update(_entity, _dt) end

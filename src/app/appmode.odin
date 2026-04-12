@@ -191,3 +191,86 @@ DestroyPlayer :: proc(_app : ^AppState) {
     ecs.DeleteEntity(&_app.world, _app.play_state.player_entity)
     _app.play_state.has_player = false
 }
+
+// #TODO: TEMP JUST TO TEST INTERACTABLE ENTITIES.
+CreateTestingInteractableEntity :: proc(_app : ^AppState) {
+    interactableEntity := ecs.CreateEntity(&_app.world)
+
+    ecs.AddComponentToEntityWorld(
+        &_app.world,
+        &_app.world.names,
+        interactableEntity,
+        components.Name{entityName = "Interactable"},
+        .Name
+    )
+
+    idle_clip, ok_idle := animation.GetDirectionalClip(&animation.player_anim_bank, "PlayerIdle", .South)
+    first_frame := idle_clip.frames[0]  
+
+    ecs.AddComponentToEntityWorld(
+        &_app.world,
+        &_app.world.sprites,
+        interactableEntity,
+        components.Sprite{
+            texture = idle_clip.texture,
+            uv_min  = first_frame.uv_min,
+            uv_max  = first_frame.uv_max,
+            size    = first_frame.size / 2,
+            color   = {1, 1, 1, 1},
+            origin  = first_frame.origin,
+            layer   = renderdata.DEPTH_SORT_LAYER,
+        },
+        .Sprite,
+    )
+
+    ecs.AddComponentToEntityWorld(
+        &_app.world,
+        &_app.world.transforms,
+        interactableEntity,
+        components.Transform{
+            pos = math.Vector2f32{1200, 1000}, 
+            rot = 0
+        },
+        .Transform
+    )
+
+    ecs.AddComponentToEntityWorld(
+        &_app.world,
+        &_app.world.colliders,
+        interactableEntity,
+        components.Collider{
+            shape = .Box,
+            half_extends = {10, 10},
+            radius = 0,
+            is_trigger = false,
+        },
+        .Collider,
+    )
+
+     ecs.AddComponentToEntityWorld(
+        &_app.world,
+        &_app.world.scripts,
+        interactableEntity,
+        components.Script{
+            path = "Resources/scripts/InteractionTest.lua", 
+            enabled = true,
+            hot_reload = true,
+        },
+        .Script
+    )
+
+    ecs.AddComponentToEntityWorld(
+        &_app.world,
+        &_app.world.interactables,
+        interactableEntity,
+        components.Interactable{
+            prompt_text = "Hello!",
+            interaction_radius = 100,
+            popup_offset_y = 20,
+            enabled = true,
+        },
+        .Interactable
+    )
+
+
+}

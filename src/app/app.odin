@@ -34,6 +34,7 @@ Init :: proc(_app : ^AppState) {
 	tilemap.InitCaveTileResources(&_app.level, &_app.renderer)
 	physics.Init(&_app.physics_world)
 	animation.LoadEntityAnimations(&_app.renderer)
+	CreateTestingInteractableEntity(_app) // Test #TODO: Remove
 
 	// Starting camera values
 	_app.renderer.camera.position = {960, 540}
@@ -89,6 +90,16 @@ Run :: proc(_app : ^AppState) {
 					_app.stats.deleta_seconds,
 				)
 
+				interaction_state : systems.Interaction_State
+				systems.UpdateInteractionSystem(
+					&_app.script_runtime,
+					&_app.world,
+					&_app.input,
+					&_app.renderer.camera,
+					_app.play_state.player_entity,
+					&interaction_state
+				)
+				
 				// Physics update
 				physics.Step(&_app.physics_world, _app.stats.deleta_seconds)
 				physics.SyncTransformsFromPhysics(&_app.physics_world, &_app.world)

@@ -34,3 +34,29 @@ GetLinearVelocity :: proc(
     v := b2.Body_GetLinearVelocity(body_id)
     return {v.x, v.y}
 }
+
+// Checks if a passed in point (world space pos) is within a collider.
+// Primarily used within the interaction system.
+PointInsideCollider :: proc(
+    _point : [2]f32,
+    _transform : ^components.Transform,
+    _collider : ^components.Collider,
+) -> bool {
+    switch _collider.shape {
+    case .Box:
+        min_x := _transform.pos.x - _collider.half_extends.x
+        max_x := _transform.pos.x + _collider.half_extends.x
+        min_y := _transform.pos.y - _collider.half_extends.y
+        max_y := _transform.pos.y + _collider.half_extends.y
+
+        return _point.x >= min_x && _point.x <= max_x &&
+               _point.y >= min_y && _point.y <= max_y
+
+    case .Circle: // There are no circle colliders yet mr garbovsky, this shouldn't run
+        dx := _point.x - _transform.pos.x
+        dy := _point.y - _transform.pos.y
+        return dx*dx + dy*dy <= _collider.radius * _collider.radius
+    }
+
+    return false
+}

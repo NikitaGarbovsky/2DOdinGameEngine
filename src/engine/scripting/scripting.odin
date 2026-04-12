@@ -6,6 +6,7 @@ import "../ecs"
 import "../physics"
 import "../input"
 import "../components"
+import "core:log"
 
 ///
 /// Main scripting file containing the main functionality for running the lua scripting runtime.
@@ -98,6 +99,38 @@ NotifyEntityDestroyed :: proc(
     current_runtime = _runtime
     defer current_runtime = nil
 
+    // Validation
+    script, hasScript := ecs.GetComponent(&current_runtime.bridge_context.world.scripts, _entity)
+    if !hasScript do return
+    if !script.enabled do return
+
+    if !EnsureScriptLoaded(_runtime, _entity, script) {
+        log.error("An entity's script was notified for distruction, but the script was found not loaded!")
+        return
+    }
+
     CallScriptOnDestroy(_runtime, _entity)
     RemoveScriptInstance(_runtime, _entity)
+}
+
+// Notifies the scripting logic to execute OnInteract for an associated entity.
+NotifyEntityInteracted :: proc(
+    _runtime : ^Script_Runtime,
+    _entity : ecs.Entity,
+    _interactor : ecs.Entity,
+) {
+    current_runtime = _runtime
+    defer current_runtime = nil
+
+    // Validation
+    script, hasScript := ecs.GetComponent(&current_runtime.bridge_context.world.scripts, _entity)
+    if !hasScript do return
+    if !script.enabled do return
+
+    if !EnsureScriptLoaded(_runtime, _entity, script) {
+        log.error("An entity's script was notified for interaction, but the script was found not loaded!")
+        return
+    }
+
+    CallScriptOnInteract(_runtime, _entity, _interactor)
 }

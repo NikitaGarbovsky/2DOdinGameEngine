@@ -15,7 +15,8 @@ Component_Flag :: enum u16 {
     Interactable,
     Trigger,
     Script,
-    Animator
+    Animator,
+    Inventory
 }
 
 // Give the bit pattern for this component type
@@ -70,7 +71,10 @@ Rigid_Body :: struct {
 }
 
 Interactable :: struct {
-
+    prompt_text : string,
+    interaction_radius : f32,
+    popup_offset_y : f32,
+    enabled : bool,
 }
 
 Trigger :: struct {
@@ -92,3 +96,8 @@ Animator :: struct {
     applied_direction : animation.Animation_Direction,
     bank : ^animation.Animation_Bank,
 } 
+
+Inventory :: struct {
+    gold : i32,
+    capacity : i32 // 0 means unlimited capacity
+}

@@ -23,6 +23,8 @@ EntityWorld :: struct {
     rigid_bodies : Component_Store(components.Rigid_Body),
     scripts : Component_Store(components.Script),
     animators : Component_Store(components.Animator),
+    interactables : Component_Store(components.Interactable),
+    inventory : Component_Store(components.Inventory),
 }
 
 // Holds references to the components and their associated entities for the ECS system.
