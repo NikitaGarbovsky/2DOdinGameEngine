@@ -3,6 +3,7 @@ package scripting
 import "base:runtime"
 import "core:math/linalg"
 import lua "vendor:lua/5.4"
+import "core:fmt"
 import "../ecs"
 import "../physics"
 import "../animation"
@@ -29,6 +30,18 @@ RegisterScriptBindings :: proc(_runtime : ^Script_Runtime) {
 
     lua.pushcfunction(_runtime.L, Lua_SetAnimationDirection)
     lua.setglobal(_runtime.L, "SetAnimationDirection")
+
+    lua.pushcfunction(_runtime.L, Lua_DestroyEntity)
+    lua.setglobal(_runtime.L, "DestroyEntity")
+
+    lua.pushcfunction(_runtime.L, Lua_GetGold)
+    lua.setglobal(_runtime.L, "GetGold")
+
+    lua.pushcfunction(_runtime.L, Lua_AddGold)
+    lua.setglobal(_runtime.L, "AddGold")
+
+    lua.pushcfunction(_runtime.L, Lua_TryRemoveGold)
+    lua.setglobal(_runtime.L, "TryRemoveGold")
 }
 
 
@@ -114,4 +127,80 @@ Lua_SetAnimationDirection :: proc "c" (_L : ^lua.State) -> i32 {
     animation.SetAnimationDirectionFromMovementVelocity(dir, &animator.anim_player)
 
     return 0
+}
+
+@private 
+Lua_DestroyEntity :: proc "c" (_L : ^lua.State) -> i32 {
+    context = runtime.default_context()
+    entity := LuaCheckEntity(_L, 1)
+
+    runtime := current_runtime
+
+    NotifyEntityDestroyed(runtime, entity)
+    ecs.DeleteEntity(runtime.bridge_context.world, entity)
+
+    return 0
+}
+
+@private
+Lua_GetGold :: proc "c" (_L : ^lua.State) -> i32 {
+    context = runtime.default_context()
+    entity := LuaCheckEntity(_L, 1)
+
+    amount : i32 = 0
+    inventory, ok := ecs.GetComponent(&current_runtime.bridge_context.world.inventory, entity)
+    if ok {
+        
+        amount = inventory.gold
+        
+    }
+
+    lua.pushinteger(_L, lua.Integer(amount))
+    return 1
+}
+
+@private 
+Lua_AddGold :: proc "c" (_L : ^lua.State) -> i32 {
+    context = runtime.default_context()
+    entity := LuaCheckEntity(_L, 1)
+    amount := i32(lua.tointeger(_L, 2))
+
+    added : i32 = 0
+    inventory, ok := ecs.GetComponent(&current_runtime.bridge_context.world.inventory, entity)
+
+    if ok && amount > 0 {
+        if inventory.capacity <= 0 {
+            inventory.gold += amount 
+            added = amount 
+        } else {
+            free_space := inventory.capacity - inventory.gold
+            if free_space < 0 do free_space = 0
+
+            added = amount 
+            if added > free_space do added = free_space
+
+            inventory.gold += added
+        }
+    }
+
+    lua.pushinteger(_L, lua.Integer(added))
+    return 1    
+}
+
+@private 
+Lua_TryRemoveGold :: proc "c" (_L : ^lua.State) -> i32 {
+    context = runtime.default_context()
+    entity := LuaCheckEntity(_L, 1)
+    amount := i32(lua.tointeger(_L, 2))
+
+    success : b32 = false
+    container, ok := ecs.GetComponent(&current_runtime.bridge_context.world.inventory, entity)
+
+    if ok && amount > 0 && container.gold >= amount {
+        container.gold -= amount
+        success = true
+    }
+
+    lua.pushboolean(_L, success)
+    return 1
 }

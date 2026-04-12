@@ -34,7 +34,13 @@ Init :: proc(_app : ^AppState) {
 	tilemap.InitCaveTileResources(&_app.level, &_app.renderer)
 	physics.Init(&_app.physics_world)
 	animation.LoadEntityAnimations(&_app.renderer)
-	CreateTestingInteractableEntity(_app) // Test #TODO: Remove
+
+	// Remove bad.
+	CreateMineCartEntity(_app, {800, 1000})
+	CreateTestingInteractableEntity(_app, {1000,1000}) // Test #TODO: Remove
+	CreateTestingInteractableEntity(_app, {1050,1000})
+	CreateTestingInteractableEntity(_app, {1100,1000})
+	CreateTestingInteractableEntity(_app, {1150,1000})
 
 	// Starting camera values
 	_app.renderer.camera.position = {960, 540}

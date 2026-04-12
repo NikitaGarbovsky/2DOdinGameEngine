@@ -2,11 +2,12 @@
 --- Gameplay script that runs player movement entity. 
 --- Hot-Reloadable during runtime
 
+---@type EngineScriptModule --- for lsp comments
 local M = {}
 
-local move_speed = 100.0
+local move_speed = 200.0
 
-function M.Update(_entity, _dt)
+function M.OnUpdate(_entity, _dt)
     -- Get player input (WASD)
     local x = GetInputMoveX()
     local y = GetInputMoveY()

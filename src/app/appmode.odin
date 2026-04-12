@@ -171,6 +171,17 @@ SpawnPlayer :: proc(_app : ^AppState) {
         },
         .Script
     )
+ 
+    ecs.AddComponentToEntityWorld(
+        &_app.world,
+        &_app.world.inventory,
+        playerEntity,
+        components.Inventory{
+            gold = 0,
+            capacity = 0
+        },
+        .Inventory
+    )
 
     transform, ok0 := ecs.GetComponent(&_app.world.transforms, _app.play_state.player_entity); assert(ok0)
     rb, ok1 := ecs.GetComponent(&_app.world.rigid_bodies, _app.play_state.player_entity); assert(ok1)
@@ -193,18 +204,18 @@ DestroyPlayer :: proc(_app : ^AppState) {
 }
 
 // #TODO: TEMP JUST TO TEST INTERACTABLE ENTITIES.
-CreateTestingInteractableEntity :: proc(_app : ^AppState) {
+CreateTestingInteractableEntity :: proc(_app : ^AppState, _spawnPos : [2]f32 = {1000, 1000}) {
     interactableEntity := ecs.CreateEntity(&_app.world)
 
     ecs.AddComponentToEntityWorld(
         &_app.world,
         &_app.world.names,
         interactableEntity,
-        components.Name{entityName = "Interactable"},
+        components.Name{entityName = "GoldIngot"},
         .Name
     )
 
-    idle_clip, ok_idle := animation.GetDirectionalClip(&animation.player_anim_bank, "PlayerIdle", .South)
+    idle_clip, ok_idle := animation.GetDirectionalClip(&animation.goldingot_anim_bank, "GoldIngotIdle", .South)
     first_frame := idle_clip.frames[0]  
 
     ecs.AddComponentToEntityWorld(
@@ -215,7 +226,7 @@ CreateTestingInteractableEntity :: proc(_app : ^AppState) {
             texture = idle_clip.texture,
             uv_min  = first_frame.uv_min,
             uv_max  = first_frame.uv_max,
-            size    = first_frame.size / 2,
+            size    = first_frame.size / 6,
             color   = {1, 1, 1, 1},
             origin  = first_frame.origin,
             layer   = renderdata.DEPTH_SORT_LAYER,
@@ -228,7 +239,7 @@ CreateTestingInteractableEntity :: proc(_app : ^AppState) {
         &_app.world.transforms,
         interactableEntity,
         components.Transform{
-            pos = math.Vector2f32{1200, 1000}, 
+            pos = _spawnPos, 
             rot = 0
         },
         .Transform
@@ -247,16 +258,40 @@ CreateTestingInteractableEntity :: proc(_app : ^AppState) {
         .Collider,
     )
 
-     ecs.AddComponentToEntityWorld(
+    ecs.AddComponentToEntityWorld(
         &_app.world,
         &_app.world.scripts,
         interactableEntity,
         components.Script{
-            path = "Resources/scripts/InteractionTest.lua", 
+            path = "Resources/scripts/GoldPieceCollectable.lua", 
             enabled = true,
             hot_reload = true,
         },
         .Script
+    )
+
+     ecs.AddComponentToEntityWorld(
+        &_app.world,
+        &_app.world.rigid_bodies,
+        interactableEntity,
+        components.Rigid_Body{
+            body_type = .Dynamic,
+            fixed_rotation = true,
+            linear_damping = 8.0,
+            gravity_scale = 0.0,
+        },
+        .Rigid_Body,
+    )
+
+    transform, ok0 := ecs.GetComponent(&_app.world.transforms, interactableEntity); assert(ok0)
+    rb, ok1 := ecs.GetComponent(&_app.world.rigid_bodies, interactableEntity); assert(ok1)
+    col, ok2 := ecs.GetComponent(&_app.world.colliders, interactableEntity); assert(ok2)
+    created := physics.CreateBodyForEntity(
+        &_app.physics_world,
+        interactableEntity,
+        transform,
+        rb,
+        col,
     )
 
     ecs.AddComponentToEntityWorld(
@@ -273,4 +308,112 @@ CreateTestingInteractableEntity :: proc(_app : ^AppState) {
     )
 
 
+}
+
+CreateMineCartEntity :: proc(_app : ^AppState, _spawnPos : [2]f32) {
+
+    minecartEntity := ecs.CreateEntity(&_app.world)
+
+    idle_clip, ok_idle := animation.GetDirectionalClip(&animation.minecart_anim_bank, "MinecartIdle", .South)
+    first_frame := idle_clip.frames[0]  
+
+    ecs.AddComponentToEntityWorld(
+        &_app.world,
+        &_app.world.sprites,
+        minecartEntity,
+        components.Sprite{
+            texture = idle_clip.texture,
+            uv_min  = first_frame.uv_min,
+            uv_max  = first_frame.uv_max,
+            size    = first_frame.size * 0.8,
+            color   = {1, 1, 1, 1},
+            origin  = first_frame.origin,
+            layer   = renderdata.DEPTH_SORT_LAYER,
+        },
+        .Sprite,
+    )
+
+    ecs.AddComponentToEntityWorld(
+        &_app.world,
+        &_app.world.transforms,
+        minecartEntity,
+        components.Transform{
+            pos = _spawnPos, 
+            rot = 0
+        },
+        .Transform
+    )
+
+    ecs.AddComponentToEntityWorld(
+        &_app.world,
+        &_app.world.colliders,
+        minecartEntity,
+        components.Collider{
+            shape = .Box,
+            half_extends = {30, 20},
+            radius = 0,
+            is_trigger = false,
+        },
+        .Collider,
+    )
+
+     ecs.AddComponentToEntityWorld(
+        &_app.world,
+        &_app.world.scripts,
+        minecartEntity,
+        components.Script{
+            path = "Resources/Scripts/Minecart.lua", 
+            enabled = true,
+            hot_reload = true,
+        },
+        .Script
+    )
+
+    ecs.AddComponentToEntityWorld(
+        &_app.world,
+        &_app.world.interactables,
+        minecartEntity,
+        components.Interactable{
+            prompt_text = "Hello!",
+            interaction_radius = 100,
+            popup_offset_y = 20,
+            enabled = true,
+        },
+        .Interactable
+    )
+
+    ecs.AddComponentToEntityWorld(
+        &_app.world,
+        &_app.world.inventory,
+        minecartEntity,
+        components.Inventory{
+            gold = 0,
+            capacity = 10,
+        },
+        .Inventory,
+    )
+
+     ecs.AddComponentToEntityWorld(
+        &_app.world,
+        &_app.world.rigid_bodies,
+        minecartEntity,
+        components.Rigid_Body{
+            body_type = .Dynamic,
+            fixed_rotation = true,
+            linear_damping = 500.0,
+            gravity_scale = 0.0,
+        },
+        .Rigid_Body,
+    )
+
+    transform, ok0 := ecs.GetComponent(&_app.world.transforms, minecartEntity); assert(ok0)
+    rb, ok1 := ecs.GetComponent(&_app.world.rigid_bodies, minecartEntity); assert(ok1)
+    col, ok2 := ecs.GetComponent(&_app.world.colliders, minecartEntity); assert(ok2)
+    created := physics.CreateBodyForEntity(
+        &_app.physics_world,
+        minecartEntity,
+        transform,
+        rb,
+        col,
+    )
 }

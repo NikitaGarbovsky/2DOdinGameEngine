@@ -39,8 +39,9 @@ UpdateLuaScripts :: proc(
     _runtime.bridge_context.input_state = _input_state
 
     // Assign a pointer to runtime, so lua api can reference it,
+    previous_runtime := current_runtime
     current_runtime = _runtime
-    defer current_runtime = nil
+    defer current_runtime = previous_runtime
 
     // Loop through all entitys that have script components attached
     // and call their lua script Start & Update functions 
@@ -96,8 +97,9 @@ NotifyEntityDestroyed :: proc(
 ) {
     if _runtime.L == nil do return 
 
+    previous_runtime := current_runtime
     current_runtime = _runtime
-    defer current_runtime = nil
+    defer current_runtime = previous_runtime
 
     // Validation
     script, hasScript := ecs.GetComponent(&current_runtime.bridge_context.world.scripts, _entity)
@@ -119,8 +121,9 @@ NotifyEntityInteracted :: proc(
     _entity : ecs.Entity,
     _interactor : ecs.Entity,
 ) {
+    previous_runtime := current_runtime
     current_runtime = _runtime
-    defer current_runtime = nil
+    defer current_runtime = previous_runtime
 
     // Validation
     script, hasScript := ecs.GetComponent(&current_runtime.bridge_context.world.scripts, _entity)

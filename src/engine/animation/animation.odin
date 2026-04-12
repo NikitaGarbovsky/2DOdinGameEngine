@@ -10,6 +10,8 @@ import glm "core:math/linalg"
 
 LoadEntityAnimations :: proc(_renderer : ^renderer.Renderer) {
     player_anim_bank.directional_sets = make(map[string][8]Animation_Clip)
+    minecart_anim_bank.directional_sets = make(map[string][8]Animation_Clip)
+    goldingot_anim_bank.directional_sets = make(map[string][8]Animation_Clip)
 
     sprite_death_sheets := [8]string {
     "Resources/Sprites/PlayerCharacter/Death/villager_death_00000_Sheet.png",
@@ -46,6 +48,40 @@ LoadEntityAnimations :: proc(_renderer : ^renderer.Renderer) {
      "Resources/Sprites/PlayerCharacter/Idle/villager_idle_70000.png"}
 
     LoadSpriteSheets(_renderer,&player_anim_bank, sprite_idle_sheets[:], "PlayerIdle", {225, 198}, 1, {0.5, 0.7})
+
+    sprite_idle_sheetsMinecart := [8]string {
+        "Resources/Sprites/Minecart/mine_cart_spritesheet0.png",
+        //"Resources/Sprites/Minecart/mine_cart_spritesheet1.png",
+        "Resources/Sprites/Minecart/mine_cart_spritesheet2.png",
+        //"Resources/Sprites/Minecart/mine_cart_spritesheet3.png",
+        "Resources/Sprites/Minecart/mine_cart_spritesheet4.png",
+        //"Resources/Sprites/Minecart/mine_cart_spritesheet5.png",
+        "Resources/Sprites/Minecart/mine_cart_spritesheet6.png",
+        //"Resources/Sprites/Minecart/mine_cart_spritesheet7.png",
+        "Resources/Sprites/Minecart/mine_cart_spritesheet8.png",
+        //"Resources/Sprites/Minecart/mine_cart_spritesheet9.png",
+        "Resources/Sprites/Minecart/mine_cart_spritesheet10.png",
+        //"Resources/Sprites/Minecart/mine_cart_spritesheet11.png",
+        "Resources/Sprites/Minecart/mine_cart_spritesheet12.png",
+        //"Resources/Sprites/Minecart/mine_cart_spritesheet13.png",
+        "Resources/Sprites/Minecart/mine_cart_spritesheet14.png",
+        //"Resources/Sprites/Minecart/mine_cart_spritesheet15.png",
+    }
+
+    LoadSpriteSheets(_renderer, &minecart_anim_bank, sprite_idle_sheetsMinecart[:], "MinecartIdle", {124, 124}, 1, {0.5, 0.7})
+
+    sprite_idle_sheetsGoldBar := [8]string {
+        "Resources/Sprites/GoldIngot/goldingot_export_dir1.png",
+        "Resources/Sprites/GoldIngot/goldingot_export_dir2.png",
+        "Resources/Sprites/GoldIngot/goldingot_export_dir3.png",
+        "Resources/Sprites/GoldIngot/goldingot_export_dir4.png",
+        "Resources/Sprites/GoldIngot/goldingot_export_dir5.png",
+        "Resources/Sprites/GoldIngot/goldingot_export_dir6.png",
+        "Resources/Sprites/GoldIngot/goldingot_export_dir7.png",
+        "Resources/Sprites/GoldIngot/goldingot_export_dir8.png",
+    }
+
+    LoadSpriteSheets(_renderer, &goldingot_anim_bank, sprite_idle_sheetsGoldBar[:], "GoldIngotIdle", {350, 350}, 1, {0.5, 0.5})
 }
 
 // Loads given sprite sheet into the Animation_Bank for use in the application.

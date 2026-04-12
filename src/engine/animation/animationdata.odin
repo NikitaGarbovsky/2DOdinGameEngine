@@ -13,6 +13,8 @@ Animation_Bank :: struct {
 }
 
 player_anim_bank : Animation_Bank
+minecart_anim_bank : Animation_Bank
+goldingot_anim_bank : Animation_Bank
 
 Animation_Frame :: struct {
     uv_min : glm.Vector2f32,

@@ -4,7 +4,17 @@ import "../ecs"
 import lua "vendor:lua/5.4"
 import "core:fmt"
 
-// #TODO: Comment this.
+///
+/// Contains api binding callbacks for gameplay scripting purposes.
+/// Pretty much identical to Unitys.
+///
+/// Contains: 
+/// --- OnStart
+/// --- OnUpdate
+/// --- OnDestroy
+/// --- OnInteract
+///
+
 
 // Script API for lua script "Start". Only runs once, on the next frame after the entity is created.
 @private 
@@ -17,7 +27,7 @@ CallScriptStart :: proc(
     if instance.started do return
 
     lua.rawgeti(_runtime.L, lua.REGISTRYINDEX, lua.Integer(instance.table_ref))
-    lua.getfield(_runtime.L, -1, "Start")
+    lua.getfield(_runtime.L, -1, "OnStart")
 
     if lua.isfunction(_runtime.L, -1) {
         lua.pushinteger(_runtime.L, lua.Integer(_entity.id))
@@ -46,7 +56,7 @@ CallScriptUpdate :: proc(
     if instance.table_ref == SCRIPT_TABLE_REGISTRY_NIL do return 
 
     lua.rawgeti(_runtime.L, lua.REGISTRYINDEX, lua.Integer(instance.table_ref))
-    lua.getfield(_runtime.L, -1, "Update")
+    lua.getfield(_runtime.L, -1, "OnUpdate")
 
     if lua.isfunction(_runtime.L, -1) {
         lua.pushinteger(_runtime.L, lua.Integer(_entity.id))
