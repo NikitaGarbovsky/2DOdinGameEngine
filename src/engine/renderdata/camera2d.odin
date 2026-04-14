@@ -64,3 +64,15 @@ ScreenToWorldPos :: proc(_cam : ^Camera2D, _screenPos : [2]f32) -> [2]f32 {
         _cam.position[1] + (_screenPos[1] - half_y) / _cam.zoom, // y
     }
 }
+
+// Converts 2D worldspace position to 2D screenspace position
+WorldToScreenPos :: proc(
+    _camera : ^Camera2D,
+    _viewport_size : [2]f32,
+    _world_pos : [2]f32,
+) -> [2]f32 {
+    screen_x := (_world_pos.x - _camera.position.x) * _camera.zoom + _viewport_size.x * 0.5
+    screen_y := (_world_pos.y - _camera.position.y) * _camera.zoom + _viewport_size.y * 0.5
+
+    return {screen_x, screen_y}
+}

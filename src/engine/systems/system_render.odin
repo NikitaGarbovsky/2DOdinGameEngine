@@ -9,7 +9,8 @@ import "../tilemap"
 /// A system is a smaller alotment of functionality that is run by main application within it's main loop.
 
 ///
-/// This system runs the main rendering of the renderables. Primarily the batching, sorting & rendering of them.
+/// This system runs the main rendering of the engine. Primarily the batching, sorting & rendering of render items,
+/// This includes all tilemap tiles and entity sprites.
 ///
 
 
@@ -49,7 +50,7 @@ RenderWorld :: proc(_world : ^ecs.EntityWorld, _level : ^tilemap.Level_State ,_r
     if !renderer.BeginWorldPass(_renderer) do return
 
     // 7. Finally, submit the render batches to the gpu
-    renderer.SubmitRenderBatches(_renderer, _renderer.sprite_batcher.batches[:])
+    renderer.SubmitRenderBatches(_renderer, _renderer.sprite_batcher.batches[:], renderdata.CameraViewProjMatrix(&_renderer.camera))
 }
 
 // Store all the postential renderable entitys that qualify to be rendered into the out array

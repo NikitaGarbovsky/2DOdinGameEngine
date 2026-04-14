@@ -11,6 +11,7 @@ import "../engine/input"
 import "../engine/systems"
 import "../engine/physics"
 import "../engine/scripting"
+import "../engine/gameplayGUI"
 
 default_context : runtime.Context // #TODO: hook this up with sdl platform
 
@@ -39,6 +40,8 @@ editorContext : systems.Editor_Mode_Context
 Play_State :: struct {
     player_entity : ecs.Entity,
     has_player : bool,
+    interaction_state : systems.Interaction_State,
+    gameplay_ui : gameplayGUI.Clay_UI,
 }
 
 InitFrameStats :: proc(_stats : ^systems.Frame_Stats) {

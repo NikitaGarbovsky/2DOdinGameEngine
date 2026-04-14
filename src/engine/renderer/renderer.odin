@@ -86,8 +86,8 @@ BeginWorldPass :: proc(_renderer : ^Renderer) -> bool {
     return true
 }
 
-// The editor ui pass, uses existing pipeline/command buffer.
-BeginEditorUIPass :: proc(_renderer : ^Renderer) -> ^sdl.GPURenderPass {
+// The UI pass, used by both Editor and Gameplay GUI. 
+BeginUIPass :: proc(_renderer : ^Renderer) -> ^sdl.GPURenderPass {
     if _renderer.cmd_buf == nil do return nil
     if _renderer.swapchain_tex == nil do return nil
 

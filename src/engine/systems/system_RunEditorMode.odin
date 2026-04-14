@@ -84,7 +84,7 @@ RenderEditorMode :: proc(_context : Editor_Mode_Context) {
 
 EditorUIPass :: proc(_context : Editor_Mode_Context) {
     // Finish with UI pass
-    ui_pass := renderer.BeginEditorUIPass(_context.renderer)
+    ui_pass := renderer.BeginUIPass(_context.renderer)
     if ui_pass != nil {
         editorimgui.EditorImgui_Render(imgui_draw_data, _context.renderer.cmd_buf, ui_pass)
         renderer.EndPass(_context.renderer)

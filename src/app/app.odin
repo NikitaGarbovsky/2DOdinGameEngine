@@ -11,6 +11,7 @@ import "../engine/input"
 import "../engine/physics"
 import "../engine/animation"
 import "../engine/scripting"
+import "../engine/gameplayGUI"
 
 ///
 /// This is the main connecting manager of the engine. It connects windowing, rendering and editor 
@@ -96,14 +97,13 @@ Run :: proc(_app : ^AppState) {
 					_app.stats.deleta_seconds,
 				)
 
-				interaction_state : systems.Interaction_State
 				systems.UpdateInteractionSystem(
 					&_app.script_runtime,
 					&_app.world,
 					&_app.input,
 					&_app.renderer.camera,
 					_app.play_state.player_entity,
-					&interaction_state
+					&_app.play_state.interaction_state
 				)
 				
 				// Physics update
@@ -123,6 +123,19 @@ Run :: proc(_app : ^AppState) {
 			systems.RenderWorld(&_app.world, &_app.level ,&_app.renderer)
 			renderer.EndPass(&_app.renderer)
 
+			// Builds the layout data of the gameplayGUI based off current state of application,
+			if _app.mode == .Playmode {
+				clay_commands := systems.BuildGameplayGUI(
+					&_app.play_state.gameplay_ui,
+					&_app.play_state.interaction_state,
+					&_app.input,
+					&_app.renderer.camera,
+					{f32(_app.platform.width), f32(_app.platform.height)},
+				)
+				//systems.DebugClayCommandCounts(&clay_commands)
+				// Sends the gui layout data to the renderer to render
+				systems.RenderGameplayGUI(&_app.renderer, &clay_commands)
+			}
 			if _app.mode == .Editor {
 				systems.EditorUIPass(editorContext) 
 			}

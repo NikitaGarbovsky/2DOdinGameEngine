@@ -9,6 +9,7 @@ import "../engine/physics"
 import "../engine/animation"
 import "../engine/systems"
 import "../engine/scripting"
+import "../engine/gameplayGUI"
 import math "core:math/linalg"
 import "core:fmt"
 
@@ -38,11 +39,17 @@ EnterPlaymode :: proc(_app : ^AppState) {
     fmt.println("Built wall collision:", built)
     
     scripting.InitializeScripting(&_app.script_runtime)
+    gameplayGUI.InitGameplayGUI(
+        &_app.play_state.gameplay_ui,
+        f32(_app.platform.width),
+        f32(_app.platform.height),
+    )
     _app.mode = .Playmode
 }
 
 EnterEditormode :: proc(_app : ^AppState) {
     scripting.ShutdownScripting(&_app.script_runtime)
+    gameplayGUI.ShutdownGameplayUI(&_app.play_state.gameplay_ui)
     fmt.println("Entering editormode...")
 
 	editorimgui.InitEditorImgui(_app.platform.window, _app.renderer.gpu, _app.renderer.swapchain_color_format, ._1)

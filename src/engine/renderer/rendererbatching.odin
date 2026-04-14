@@ -3,6 +3,7 @@ package renderer
 import "core:log"
 import sdl "vendor:sdl3"
 import renderdata "../renderdata"
+import glm "core:math/linalg"
 import "core:fmt"
 
 // #TODO: comment this 
@@ -222,23 +223,28 @@ InitSpriteBatcher :: proc(_renderer : ^Renderer, _max_instances : u32) -> bool {
     return true
 }
 
-// Builds the batches of renderable items for the scene
-BuildBatches :: proc(_renderer : ^Renderer, _items : []renderdata.Render_Item, _out_instances : ^[dynamic]renderdata.Sprite_Instance, _out_batches : ^[dynamic]renderdata.Batch) {
-    clear(_out_instances)
-    clear(_out_batches)
+// Builds the batches of renderable items
+BuildBatches :: proc(
+    _renderer : ^Renderer, 
+    _renderItems : []renderdata.Render_Item,
+    _outInstances : ^[dynamic]renderdata.Sprite_Instance, 
+    _outBatches : ^[dynamic]renderdata.Batch
+) {
+    clear(_outInstances)
+    clear(_outBatches)
 
-    if len(_items) == 0 do return
+    if len(_renderItems) == 0 do return
 
-    current_material := _items[0].material
-    current_pass := _items[0].pass
+    current_material := _renderItems[0].material
+    current_pass := _renderItems[0].pass
     first_instance : u32 = 0
     count : u32 = 0
 
-    for item in _items {
+    for item in _renderItems {
         same_batch := item.pass == current_pass && item.material == current_material
 
         if !same_batch {
-            append(_out_batches, renderdata.Batch{
+            append(_outBatches, renderdata.Batch{
                 material = current_material,
                 pass = current_pass,
                 first_instance = first_instance,
@@ -247,22 +253,20 @@ BuildBatches :: proc(_renderer : ^Renderer, _items : []renderdata.Render_Item, _
 
             current_material = item.material
             current_pass = item.pass
-            first_instance = u32(len(_out_instances))
+            first_instance = u32(len(_outInstances))
             count = 0
         }
 
-        append(_out_instances, item.instance)
+        append(_outInstances, item.instance)
         count += 1
     }
 
-    append(_out_batches, renderdata.Batch{
+    append(_outBatches, renderdata.Batch{
         material = current_material,
         pass = current_pass,
         first_instance = first_instance,
         instance_count = count,
     })
-
-    
 }
 
 InitSpritePipeline :: proc(_renderer : ^Renderer, _vert_code, _frag_code : []u8) -> bool {
@@ -452,17 +456,20 @@ InitSpritePipeline :: proc(_renderer : ^Renderer, _vert_code, _frag_code : []u8)
     return true
 }
 
-// 
-SubmitRenderBatches :: proc(_renderer : ^Renderer, _batches : []renderdata.Batch) {
+// Sents all the batched render data to the gpu.
+SubmitRenderBatches :: proc(
+    _renderer : ^Renderer,
+    _batches : []renderdata.Batch,
+    _view_proj : glm.Matrix4f32,
+) {
     if _renderer.render_pass == nil do return
     if _renderer.sprite_pipeline == nil do return
     if len(_batches) == 0 do return
 
     global_vs := Sprite_Global_VS_Uniform{
-        view_proj = renderdata.CameraViewProjMatrix(&_renderer.camera)
+        view_proj = _view_proj,
     }
 
-    // This persists across the batch, very nice optimization
     sdl.PushGPUVertexUniformData(
         _renderer.cmd_buf,
         0,
@@ -487,7 +494,6 @@ SubmitRenderBatches :: proc(_renderer : ^Renderer, _batches : []renderdata.Batch
     current_material : renderdata.Material_Key
     first := true
 
-    
     for batch in _batches {
         if first || batch.material != current_material {
             BindMaterial(_renderer, batch.material)
@@ -506,17 +512,17 @@ SubmitRenderBatches :: proc(_renderer : ^Renderer, _batches : []renderdata.Batch
     }
 
     // ============= Debug info for the editor =============
-        _renderer.batchCountThisFrame = len(_batches)
-        totalRenderCount : u32 
-        world_instance_count : u32
-        for batch in _batches {
-            totalRenderCount += batch.instance_count
-            if batch.pass == .World {
-                world_instance_count += batch.instance_count
-            }
+    _renderer.batchCountThisFrame = len(_batches)
+    totalRenderCount : u32 
+    world_instance_count : u32
+    for batch in _batches {
+        totalRenderCount += batch.instance_count
+        if batch.pass == .World {
+            world_instance_count += batch.instance_count
         }
-        _renderer.renderedWorldElementsThisFrame = world_instance_count
-        _renderer.totalRenderedElementsThisFrame = totalRenderCount
+    }
+    _renderer.renderedWorldElementsThisFrame = world_instance_count
+    _renderer.totalRenderedElementsThisFrame = totalRenderCount
 }
 
 // Helper to look up the material resource and binds them (before the batch draw)
