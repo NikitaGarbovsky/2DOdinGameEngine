@@ -6,7 +6,7 @@ import imgui "Dependencies:odin-imgui"
 /// Definitions for editorimgui objects utilized by the editorimgui
 ///
 
-is_asset_browser_open : bool
+is_asset_browser_open : bool 
 is_debug_info_open : bool
 
 // The font data the editor uses for imgui
