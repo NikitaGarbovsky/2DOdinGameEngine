@@ -38,6 +38,9 @@ InitEditorImgui :: proc(_window : ^sdl.Window,
         imgui.font_atlas_get_glyph_ranges_default(io.fonts),
     )
 
+    // Scan the resource directory and cache the result
+    asset_tree_root = ScanDirectory(asset_root_path)^
+
     // Init backends
     ok1 := imgui_impl_sdl3.init_for_sdlgpu(_window); assert(ok1)
     initinfo : imgui_impl_sdlgpu3.Init_Info = {_device, _tformat, _sampleCount}
