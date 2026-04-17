@@ -7,10 +7,12 @@ import "core:log"
 ///
 /// Helpers for leveldata loading, saving & destroying.
 ///
-// #TODO: comment this 
 
-
-SaveLevelFile :: proc(_path : string, _file : Level_File) -> bool {
+// Saves the collected level data to the json level file 
+SaveLevelFile :: proc(
+    _path : string, 
+    _file : Level_File
+) -> bool {
     data, error := json.marshal(
         _file,
         json.Marshal_Options{
@@ -34,7 +36,11 @@ SaveLevelFile :: proc(_path : string, _file : Level_File) -> bool {
     return true
 }
 
-LoadLevelFile :: proc(_path : string, _allocator := context.allocator) -> (Level_File, bool) {
+// Loads the level data (tilemap & entities) from the json level file
+LoadLevelFile :: proc(
+    _path : string, 
+    _allocator := context.allocator
+) -> (Level_File, bool) {
     data, read_err := os.read_entire_file_from_path(_path, _allocator)
     if read_err != nil {
         log.errorf("LoadLevelFile: failed to read '{}': {}", _path, read_err)
@@ -67,5 +73,9 @@ DestroyLevelFile :: proc(_file : ^Level_File) {
 
     if cap(_file.tile_layers) > 0 {
         delete(_file.tile_layers)
+    }
+
+    if cap(_file.entities) > 0 {
+        delete(_file.entities)
     }
 }

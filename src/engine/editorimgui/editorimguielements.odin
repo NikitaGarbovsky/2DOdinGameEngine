@@ -7,14 +7,24 @@ import "core:math"
 import "core:os"
 import "core:sort"
 import "core:path/filepath"
+import "../ecs"
+import "../components"
+
 ///
-/// Contains the implementation details of the full imgui editor.
+/// Contains the implementation details of the full imgui editor, each procedure represents a 
+/// drawable element for dear_imgui. 
 ///
 
 
-DrawDebugInfo :: proc() {
+// Draws all the collective elements
+DrawDebugInfo :: proc(_world : ^ecs.EntityWorld) {
+    DrawEntitiesButton()
     DrawAssetBrowserButton()
     DrawDebugButton()
+
+    if is_entities_open {
+        DrawEntitiesWindow(_world)
+    }
     if is_debug_info_open {
         DrawDebugInfoWindow()
     }
@@ -23,7 +33,9 @@ DrawDebugInfo :: proc() {
     }
 }
 
+
 // Draws the asset browser to the screen.
+@private
 DrawAssetBrowserButton :: proc() {
     vp := imgui.get_main_viewport()
     if vp == nil do return
@@ -58,6 +70,7 @@ DrawAssetBrowserButton :: proc() {
 }
 
 // Draws debugging information from the engine 
+@private
 DrawDebugButton :: proc() {
     vp := imgui.get_main_viewport()
     if vp == nil do return
@@ -91,6 +104,9 @@ DrawDebugButton :: proc() {
     imgui.end()
 }
 
+// The debug window that is displayed from the debug button
+// #TODO: this has some terrible allocation issues that I will fix at some stage 
+@private
 DrawDebugInfoWindow :: proc() {
     vp := imgui.get_main_viewport()
     if vp == nil do return
@@ -174,10 +190,11 @@ DrawDebugInfoWindow :: proc() {
     imgui.end()
 }
 
+// The asset browser displaying file structure
+@private
 DrawAssetBrowser :: proc() {
     vp := imgui.get_main_viewport()
     if vp == nil do return
-
 
     flags : imgui.Window_Flags = {
             .No_Collapse,
@@ -240,6 +257,7 @@ DrawAssetBrowser :: proc() {
 }
 
 // Helper for getting the child directories when filling the Asset Browser
+@private
 GatherChildDirs :: proc(_root : string, _outKids : ^[dynamic]string) {
     clear(_outKids)
 
@@ -262,6 +280,7 @@ GatherChildDirs :: proc(_root : string, _outKids : ^[dynamic]string) {
 }
 
 // Used by asset browser to draw the cached directories from the Resources folder 
+@private
 DrawCachedNodeRecursive :: proc(node: ^Asset_Node) {
     flags: imgui.Tree_Node_Flags = { .Open_On_Arrow, .Span_Full_Width }
     
@@ -292,6 +311,7 @@ DrawCachedNodeRecursive :: proc(node: ^Asset_Node) {
 
 // Scanns the passed directory and caches all the child files & folders
 // mainly used by the asset browser 
+@private
 ScanDirectory :: proc(_path: string) -> ^Asset_Node {
 
     // Creates a new node and fills its data
@@ -316,4 +336,318 @@ ScanDirectory :: proc(_path: string) -> ^Asset_Node {
         }
     }
     return node
+}
+
+// The entity button at the top left-hand side of the screen.
+@private
+DrawEntitiesButton :: proc() {
+    vp := imgui.get_main_viewport()
+    if vp == nil do return
+
+    win_size := imgui.Vec2{76, 40}
+    win_pos := imgui.Vec2{
+        x = vp.work_pos.x + 12.0,
+        y = vp.work_pos.y + 12.0,
+    }
+
+    imgui.set_next_window_pos(win_pos, .Always)
+    imgui.set_next_window_size(win_size, .Always)
+
+    flags : imgui.Window_Flags = {
+        .No_Resize,
+        .No_Move,
+        .No_Collapse,
+        .No_Saved_Settings,
+        .No_Title_Bar,
+        .No_Scrollbar,
+    }
+
+    imgui.push_font(l_editor_font)
+    if imgui.begin("EntitiesButtonWindow", nil, flags) {
+        if imgui.button("Entities") {
+            is_entities_open = !is_entities_open
+        }
+    }
+    imgui.pop_font()
+    imgui.end()
+}
+
+// Sorts all the alive entities by ID for the entity dropdown list
+@private
+GetAliveEntitiesSorted :: proc(_world : ^ecs.EntityWorld, _out : ^[dynamic]ecs.Entity) {
+    clear(_out)
+
+    for entity, alive in _world.alive {
+        if alive {
+            append(_out, entity)
+        }
+    }
+
+    sort.quick_sort_proc(_out[:], proc(a, b: ecs.Entity) -> int {
+        if a.id < b.id do return -1
+        if a.id > b.id do return 1
+        return 0
+    })
+}
+
+// Helper, returns the entity name from the name component attached to it.
+@private
+GetEntityDisplayName :: proc(_world : ^ecs.EntityWorld, _entity : ecs.Entity) -> string {
+    if name, ok := ecs.GetComponent(&_world.names, _entity); ok {
+        return fmt.tprintf("[%d] %s", _entity.id, name.entityName)
+    }
+    return fmt.tprintf("[%d] <Unnamed>", _entity.id)
+}
+
+// Draws the entity window containing all the mutatable entity information.
+@private
+DrawEntitiesWindow :: proc(_world : ^ecs.EntityWorld) {
+    vp := imgui.get_main_viewport()
+    if vp == nil do return
+
+    win_size := imgui.Vec2{420, 600}
+    win_pos := imgui.Vec2{
+        x = vp.work_pos.x + 12.0,
+        y = vp.work_pos.y + 60.0,
+    }
+
+    flags : imgui.Window_Flags = {
+        .No_Collapse,
+        .No_Saved_Settings,
+    }
+
+    imgui.set_next_window_pos(win_pos, .Always)
+    imgui.set_next_window_size(win_size, .Always)
+
+    if imgui.begin("Entities", &is_entities_open, flags) {
+        if imgui.button("Spawn Minecart") {
+            editor_actions.spawn_minecart = true
+        }
+        imgui.same_line()
+        if imgui.button("Spawn Gold Ingot") {
+            editor_actions.spawn_gold_ingot = true
+        }
+
+        imgui.separator()
+
+        entities : [dynamic]ecs.Entity
+        defer delete(entities)
+        GetAliveEntitiesSorted(_world, &entities)
+
+        // If selected entity got deleted, clear selection #TODO: Currently no entity deletion in the editor
+        if entity_inspector_state.has_selected_entity {
+            if _, ok := _world.alive[entity_inspector_state.selected_entity]; !ok {
+                entity_inspector_state.has_selected_entity = false
+            }
+        }
+
+        preview_text := "None"
+        if entity_inspector_state.has_selected_entity {
+            preview_text = GetEntityDisplayName(_world, entity_inspector_state.selected_entity)
+        }
+
+        preview_c := strings.clone_to_cstring(preview_text, context.temp_allocator)
+
+        if imgui.begin_combo("Selected Entity", preview_c) {
+            for entity in entities {
+                label := GetEntityDisplayName(_world, entity)
+                label_c := strings.clone_to_cstring(label, context.temp_allocator)
+
+                is_selected := entity_inspector_state.has_selected_entity &&
+                               entity.id == entity_inspector_state.selected_entity.id
+
+                if imgui.selectable(label_c, is_selected) {
+                    entity_inspector_state.selected_entity = entity
+                    entity_inspector_state.has_selected_entity = true
+                }
+
+                if is_selected {
+                    imgui.set_item_default_focus()
+                }
+            }
+            imgui.end_combo()
+        }
+
+        imgui.separator()
+
+        if entity_inspector_state.has_selected_entity {
+            DrawSelectedEntityInspector(_world, entity_inspector_state.selected_entity)
+        } else {
+            imgui.text_unformatted("No entity selected.")
+        }
+    }
+
+    imgui.end()
+}
+
+// Draws all the component fields that are attached to the entity.
+@private
+DrawSelectedEntityInspector :: proc(_world : ^ecs.EntityWorld, _entity : ecs.Entity) {
+    label := GetEntityDisplayName(_world, _entity)
+    label_c := strings.clone_to_cstring(label, context.temp_allocator)
+    imgui.text(label_c)
+    imgui.separator()
+
+    if name, ok := ecs.GetComponent(&_world.names, _entity); ok {
+        if imgui.collapsing_header("Name") {
+            name_c := strings.clone_to_cstring(name.entityName, context.temp_allocator)
+            imgui.text(name_c)
+        }
+    }
+
+    if transform, ok := ecs.GetComponent(&_world.transforms, _entity); ok {
+        if imgui.collapsing_header("Transform") {
+            pos := [2]f32{transform.pos.x, transform.pos.y}
+            if imgui.drag_float2("Position", &pos, 1.0) {
+                transform.pos = {pos[0], pos[1]}
+            }
+
+            rot := transform.rot
+            if imgui.drag_float("Rotation", &rot, 0.01) {
+                transform.rot = rot
+            }
+        }
+    }
+
+    if sprite, ok := ecs.GetComponent(&_world.sprites, _entity); ok {
+        if imgui.collapsing_header("Sprite") {
+            size := [2]f32{sprite.size.x, sprite.size.y}
+            if imgui.drag_float2("Size", &size, 0.1) {
+                sprite.size = {size[0], size[1]}
+            }
+
+            if imgui.drag_float2("UV Min", &sprite.uv_min, 0.001) {}
+            if imgui.drag_float2("UV Max", &sprite.uv_max, 0.001) {}
+            if imgui.drag_float2("Origin", &sprite.origin, 0.01) {}
+            if imgui.color_edit4("Color", &sprite.color) {}
+
+            layer := sprite.layer
+            if imgui.input_int("Layer", &layer) {
+                sprite.layer = layer
+            }
+        }
+    }
+
+    if collider, ok := ecs.GetComponent(&_world.colliders, _entity); ok {
+        if imgui.collapsing_header("Collider") {
+            imgui.text_unformatted("Shape")
+            if imgui.small_button("Box") {
+                collider.shape = .Box
+            }
+            imgui.same_line()
+            if imgui.small_button("Circle") {
+                collider.shape = .Circle
+            }
+
+            switch collider.shape {
+            case .Box:
+                half := [2]f32{collider.half_extends.x, collider.half_extends.y}
+                if imgui.drag_float2("Half Extents", &half, 0.1) {
+                    collider.half_extends = {half[0], half[1]}
+                }
+            case .Circle:
+                radius := collider.radius
+                if imgui.drag_float("Radius", &radius, 0.1) {
+                    collider.radius = radius
+                }
+            }
+
+            imgui.checkbox("Is Trigger", &collider.is_trigger)
+        }
+    }
+
+    if rb, ok := ecs.GetComponent(&_world.rigid_bodies, _entity); ok {
+        if imgui.collapsing_header("Rigid Body") {
+            imgui.text_unformatted("Body Type")
+            if imgui.small_button("Static") {
+                rb.body_type = .Static
+            }
+            imgui.same_line()
+            if imgui.small_button("Dynamic") {
+                rb.body_type = .Dynamic
+            }
+            imgui.same_line()
+            if imgui.small_button("Kinematic") {
+                rb.body_type = .Kinematic
+            }
+
+            imgui.checkbox("Fixed Rotation", &rb.fixed_rotation)
+
+            linear_damping := rb.linear_damping
+            if imgui.drag_float("Linear Damping", &linear_damping, 0.1) {
+                rb.linear_damping = linear_damping
+            }
+
+            gravity_scale := rb.gravity_scale
+            if imgui.drag_float("Gravity Scale", &gravity_scale, 0.1) {
+                rb.gravity_scale = gravity_scale
+            }
+        }
+    }
+
+    if interactable, ok := ecs.GetComponent(&_world.interactables, _entity); ok {
+        if imgui.collapsing_header("Interactable") {
+            prompt_c := strings.clone_to_cstring(interactable.prompt_text, context.temp_allocator)
+            imgui.text(prompt_c)
+
+            radius := interactable.interaction_radius
+            if imgui.drag_float("Interaction Radius", &radius, 0.1) {
+                interactable.interaction_radius = radius
+            }
+
+            popup_offset_y := interactable.popup_offset_y
+            if imgui.drag_float("Popup Offset Y", &popup_offset_y, 0.1) {
+                interactable.popup_offset_y = popup_offset_y
+            }
+
+            imgui.checkbox("Enabled", &interactable.enabled)
+        }
+    }
+
+    if script, ok := ecs.GetComponent(&_world.scripts, _entity); ok {
+        if imgui.collapsing_header("Script") {
+            path_c := strings.clone_to_cstring(script.path, context.temp_allocator)
+            imgui.text(path_c)
+
+            imgui.checkbox("Enabled", &script.enabled)
+            imgui.checkbox("Hot Reload", &script.hot_reload)
+        }
+    }
+
+    if inventory, ok := ecs.GetComponent(&_world.inventory, _entity); ok {
+        if imgui.collapsing_header("Inventory") {
+            gold := inventory.gold
+            if imgui.input_int("Gold", &gold) {
+                inventory.gold = gold
+            }
+
+            capacity := inventory.capacity
+            if imgui.input_int("Capacity", &capacity) {
+                inventory.capacity = capacity
+            }
+        }
+    }
+
+    if animator, ok := ecs.GetComponent(&_world.animators, _entity); ok {
+        if imgui.collapsing_header("Animator") {
+            req_c := strings.clone_to_cstring(animator.requested_state, context.temp_allocator)
+            cur_c := strings.clone_to_cstring(animator.current_state, context.temp_allocator)
+
+            imgui.text(req_c)
+            imgui.text(cur_c)
+
+            speed := animator.anim_player.speed
+            if imgui.drag_float("Speed", &speed, 0.01) {
+                animator.anim_player.speed = speed
+            }
+
+            frame_time := animator.anim_player.per_frame_time
+            if imgui.drag_float("Per Frame Time", &frame_time, 0.001) {
+                animator.anim_player.per_frame_time = frame_time
+            }
+
+            imgui.checkbox("Playing", &animator.anim_player.playing)
+            imgui.checkbox("Flip X", &animator.anim_player.flip_x)
+        }
+    }
 }

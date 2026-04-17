@@ -69,6 +69,13 @@ UpdateEditorDebugInfo :: proc(_fps , _ms: f64, _batchCount : int, _worldRenderer
     frameDebugInfo.culledTilemapSpriteThisFrame = _culledTiles
 }
 
+// Helper for setting editor actions (currently just spawning of entities)
+ConsumeEditorActions :: proc() -> Editor_Actions {
+    actions := editor_actions 
+    editor_actions = {}
+    return actions
+}
+
 ShutdownEditorImgui :: proc() {
     imgui_impl_sdlgpu3.shutdown()
     imgui_impl_sdl3.shutdown()

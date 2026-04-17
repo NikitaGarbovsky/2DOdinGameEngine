@@ -13,6 +13,8 @@ import "../engine/physics"
 import "../engine/animation"
 import "../engine/scripting"
 import "../engine/gameplayGUI"
+import "../game/prefabs"
+import "../engine/levelscene"
 
 ///
 /// This is the main connecting manager of the engine. It connects windowing, rendering and editor 
@@ -26,9 +28,9 @@ import "../engine/gameplayGUI"
 shader_frag_batch := #load("../../Resources/Shaders/sprite_batch.frag.spv")
 shader_vert_batch := #load("../../Resources/Shaders/sprite_batch.vert.spv")
 
+// Initialize all the part's of the engine 
 Init :: proc(_app : ^AppState) {
 
-	// ======== Initialize all the part's of the engine ========
 	platform.Init(&_app.platform)
 	ecs.Init(&_app.world)
 	renderer.Init(&_app.renderer, &_app.platform, shader_vert_batch, shader_frag_batch)
@@ -37,15 +39,8 @@ Init :: proc(_app : ^AppState) {
 	physics.Init(&_app.physics_world)
 	animation.LoadEntityAnimations(&_app.renderer)
 
-	// Remove bad.
-	CreateMineCartEntity(_app, {800, 1000})
-	CreateTestingInteractableEntity(_app, {1000,1000}) // Test #TODO: Remove
-	CreateTestingInteractableEntity(_app, {1050,1000})
-	CreateTestingInteractableEntity(_app, {1100,1000})
-	CreateTestingInteractableEntity(_app, {1150,1000})
-
 	// Starting camera values
-	_app.renderer.camera.position = {960, 540}
+	_app.renderer.camera.position = {1000, 1000}
 	_app.renderer.camera.zoom = 1.5
 
 	fmt.printfln("--- Engine Intialized Successfully.")
@@ -53,7 +48,12 @@ Init :: proc(_app : ^AppState) {
 	// Default to editor mode, also initializes editor.
 	EnterEditormode(_app) 
 
-	tilemap.LoadLevelFromPath(&_app.level, "Resources/Levels/level1.level.json")
+	// By default the engine loads the first level
+	levelscene.LoadLevelFromPath(
+		&_app.level, 
+		&_app.world, 
+		&_app.physics_world, 
+		"Resources/Levels/level1.level.json")
 }
 
 // Runs the main loop of the application, depending on the current app state.
@@ -86,6 +86,7 @@ Run :: proc(_app : ^AppState) {
 					level_state = &_app.level,
 					entity_world = &_app.world,
 					renderer = &_app.renderer,
+					physics_world = &_app.physics_world,
 				}
 				systems.RenderEditorMode(editorContext) 
 			}
@@ -140,7 +141,20 @@ Run :: proc(_app : ^AppState) {
 				systems.RenderGameplayGUI(&_app.renderer, &_app.play_state.gameplay_ui ,&clay_commands)
 			}
 			if _app.mode == .Editor {
-				systems.EditorUIPass(editorContext) 
+				actions := editorimgui.ConsumeEditorActions()
+				spawn_pos := [2]f32{
+					_app.renderer.camera.position.x,
+					_app.renderer.camera.position.y,
+				}
+
+				if actions.spawn_minecart {
+					prefabs.CreateMineCartEntity(&_app.world, &_app.physics_world, spawn_pos)
+				}
+
+				if actions.spawn_gold_ingot {
+					prefabs.CreateGoldIngotEntity(&_app.world, &_app.physics_world, spawn_pos)
+				}
+				systems.EditorUIPass(editorContext)
 			}
 			
 			// Push all accumulated frame data to GPU

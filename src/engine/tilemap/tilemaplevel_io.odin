@@ -6,7 +6,7 @@ import "core:slice"
 
 /// Manages transforming the tilemap grid data to level data to save it.
 
-
+// Just adds the path string to the path buffer object
 PathBuffer_Set :: proc(_buf : ^Path_Buffer, _value : string) -> bool {
     if len(_value) <= 0 {
         _buf.len = 0
@@ -80,61 +80,5 @@ ApplyTileLayerData :: proc(_level : ^Level_State, _layer : Tilemap_Layer, _layer
         log.warnf("ApplyTileLayerData: skipped {} tiles due to missing defs", missing_defs)
     }
 
-    return true
-}
-
-SaveCurrentLevel :: proc(_level : ^Level_State) -> bool {
-    if _level.editor.current_level_path.len == 0 {
-        log.warn("SaveCurrentLevel: no current level path set")
-        return false
-    }
-
-    file := leveldata.Level_File{
-        version = 1,
-        tile_layers = make([dynamic]leveldata.Tile_Layer_Data, 0, TILEMAP_LAYER_COUNT),
-    }
-    defer leveldata.DestroyLevelFile(&file)
-
-    append(&file.tile_layers, BuildTileLayerData(_level, .Ground))
-    append(&file.tile_layers, BuildTileLayerData(_level, .Walls))
-    append(&file.tile_layers, BuildTileLayerData(_level, .Decoration))
-
-    path := PathBuffer_String(&_level.editor.current_level_path)
-    ok := leveldata.SaveLevelFile(path, file)
-    if ok {
-        log.infof("Saved tilemap level: {}", path)
-    }
-
-    return ok
-}
-
-LoadLevelFromPath :: proc(_level : ^Level_State, _path : string) -> bool {
-    file, ok := leveldata.LoadLevelFile(_path)
-    if !ok {
-        return false
-    }
-    defer leveldata.DestroyLevelFile(&file)
-
-    ClearAllTileLayers(_level)
-
-    for i := 0; i < len(file.tile_layers); i += 1 {
-        layer_data := file.tile_layers[i]
-
-        layer, ok := TilemapLayerFromName(layer_data.name)
-        if !ok {
-            log.warnf("LoadLevelFromPath: unknown layer '{}', skipping", layer_data.name)
-            continue
-        }
-
-        if !ApplyTileLayerData(_level, layer, layer_data) {
-            return false
-        }
-    }
-
-    if !PathBuffer_Set(&_level.editor.current_level_path, _path) {
-        log.warnf("LoadLevelFromPath: loaded level, but failed to store current path '{}'", _path)
-    }
-
-    log.infof("Loaded tilemap level: {}", _path)
     return true
 }

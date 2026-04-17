@@ -6,11 +6,15 @@ import "../input"
 import "../renderdata"
 import "../components"
 import "../physics"
-import "core:math"
-import "core:fmt"
 
-// #TODO: COmment this when system is fully implemented.
+/// A system is a smaller alotment of functionality that is run by main application within it's main loop.
 
+///
+/// This system manages the interaction system for interacting with entities in the game, it utilizes
+/// the Interactable component attached to entities.
+///
+
+// State that is passed from the main loop to trigger iterations
 Interaction_State :: struct {
     hovered_entity : ecs.Entity,
     has_hovered : bool,
@@ -80,6 +84,7 @@ UpdateInteractionSystem :: proc(
     hovered_interactable, hasInteractable := ecs.GetComponent(&_world.interactables, found_interactable_entity)
     hovered_transform, hasHoveredTransform := ecs.GetComponent(&_world.transforms, found_interactable_entity)
     if !hasInteractable || !hasHoveredTransform do return
+    if !hovered_interactable.enabled do return
 
     // 6. Check distance from player to interactable
     player_dist_sq := DistSq(

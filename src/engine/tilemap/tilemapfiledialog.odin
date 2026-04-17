@@ -10,6 +10,14 @@ import "core:strings"
 
 LEVEL_FILE_SUFFIX :: ".level.json"
 
+Level_Dialog_Results :: struct {
+    should_load : bool,
+    load_path : Path_Buffer,
+
+    should_save : bool,
+    save_path : Path_Buffer,
+}
+
 level_file_filters := [1]sdl.DialogFileFilter{
     {name = "Level Files", pattern = "level.json"},
 }
@@ -106,18 +114,32 @@ RequestSaveLevelDialog :: proc(_level : ^Level_State) {
     )
 }
 
-// If the user hasn't saved this level, it will auto save as #TODO: give the user the option to always save as.
+// If the user hasn't saved this level, it will auto save as.
 SaveCurrentLevelOrPromptSaveAs :: proc(_level : ^Level_State) -> bool {
+    sync.mutex_lock(&_level.editor.dialog_mutex)
+    defer sync.mutex_unlock(&_level.editor.dialog_mutex)
+
+    // If we already know the level path, queue a save request immediately.
     if _level.editor.current_level_path.len > 0 {
-        return SaveCurrentLevel(_level)
+        if !PathBuffer_Set(&_level.editor.pending_save_path, PathBuffer_String(&_level.editor.current_level_path)) {
+            log.error("SaveCurrentLevelOrPromptSaveAs: current level path was too long")
+            return false
+        }
+
+        _level.editor.has_pending_save_path = true
+        return true
     }
 
+    // Otherwise ask the user where to save it.
     RequestSaveLevelDialog(_level)
     return false
 }
 
-// Checks if any threads have 
-PumpPendingDialogResults :: proc(_level : ^Level_State) {
+// When the callback executes for the dialog results, this pumps those results
+// to the main thread. 
+PumpPendingDialogResults :: proc(_level : ^Level_State) -> Level_Dialog_Results {
+    results := Level_Dialog_Results{}
+
     local_load_path : Path_Buffer
     has_load_path := false
 
@@ -143,19 +165,22 @@ PumpPendingDialogResults :: proc(_level : ^Level_State) {
     sync.mutex_unlock(&_level.editor.dialog_mutex)
 
     if has_load_path {
-        path := PathBuffer_String(&local_load_path)
-        _ = LoadLevelFromPath(_level, path)
+        results.should_load = true
+        results.load_path = local_load_path
     }
 
     if has_save_path {
         path := PathBuffer_String(&local_save_path)
 
         if PathBuffer_Set(&_level.editor.current_level_path, path) {
-            _ = SaveCurrentLevel(_level)
+            results.should_save = true
+            results.save_path = local_load_path
         } else {
             log.errorf("PumpPendingDialogResults: failed to store save path '{}'", path)
         }
     }
+
+    return results
 }
 
 // ========= Helpers =========

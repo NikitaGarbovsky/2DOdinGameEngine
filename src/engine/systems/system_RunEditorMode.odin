@@ -7,6 +7,8 @@ import "../renderer"
 import "../tilemap"
 import "../input"
 import "../ecs"
+import "../levelscene"
+import "../physics"
 
 /// A system is a smaller alotment of functionality that is run by main application within it's main loop.
 
@@ -23,6 +25,7 @@ Editor_Mode_Context :: struct {
     level_state : ^tilemap.Level_State,
     entity_world : ^ecs.EntityWorld,
     renderer : ^renderer.Renderer,
+    physics_world : ^physics.PhysicsWorld
 }
 
 Frame_Stats :: struct {
@@ -39,7 +42,26 @@ imgui_draw_data : ^imgui.Draw_Data
 RenderEditorMode :: proc(_context : Editor_Mode_Context) {
     // Level Load/Save is async in sdl3, so we call this everyframe to catch the 
     // callbacks execution when their results occur. Refer to tilemapfiledialog.odin
-    tilemap.PumpPendingDialogResults(_context.level_state) 
+    dialog_results := tilemap.PumpPendingDialogResults(_context.level_state) 
+
+    // Grabs any results from loading/saving of the scene and does 
+    // the corresponding functionality.
+    path := tilemap.PathBuffer_String(&dialog_results.load_path)
+    if dialog_results.should_load {
+        _ = levelscene.LoadLevelFromPath(
+            _context.level_state,
+            _context.entity_world,
+            _context.physics_world,
+            path,
+        )
+    }
+
+    if dialog_results.should_save {
+        _ = levelscene.SaveCurrentLevel(
+            _context.level_state,
+            _context.entity_world,
+        )
+    }
 
     editorimgui.EditorImgui_BeginFrame()
 
@@ -53,7 +75,7 @@ RenderEditorMode :: proc(_context : Editor_Mode_Context) {
             _context.renderer.culledEntityElementsThisFrame, 
             _context.renderer.culledTilemapElementsThisFrame
         )
-        editorimgui.DrawDebugInfo()
+        editorimgui.DrawDebugInfo(_context.entity_world)
 
         tilemap.DrawEditorUI(_context.level_state)
         

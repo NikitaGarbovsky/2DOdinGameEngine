@@ -1787,7 +1787,7 @@
         {
           "x": 68,
           "y": -7,
-          "tile": "track_06"
+          "tile": "ground_01"
         },
         {
           "x": 69,
@@ -6506,6 +6506,580 @@
       "tiles": [
 
       ]
+    }
+  ],
+  "entities": [
+    {
+      "kind": 1,
+      "name": "Gold Ingot",
+      "pos": [
+        2263.08422852,
+        508.15966797
+      ],
+      "rot": 0.00000000,
+      "sprite_size": [
+        58.33333206,
+        58.33333206
+      ],
+      "sprite_color": [
+        1.00000000,
+        1.00000000,
+        1.00000000,
+        1.00000000
+      ],
+      "sprite_origin": [
+        0.50000000,
+        0.50000000
+      ],
+      "sprite_uv_min": [
+        0.00000000,
+        0.00000000
+      ],
+      "sprite_uv_max": [
+        1.00000000,
+        1.00000000
+      ],
+      "sprite_layer": 100,
+      "collider_shape": 0,
+      "collider_half_extends": [
+        10.00000000,
+        10.00000000
+      ],
+      "collider_radius": 0.00000000,
+      "collider_is_trigger": false,
+      "rb_body_type": 1,
+      "rb_fixed_rotation": true,
+      "rb_linear_damping": 8.00000000,
+      "rb_gravity_scale": 0.00000000,
+      "interactable_prompt_text": "Gold Ingot",
+      "interactable_radius": 100.00000000,
+      "interactable_popup_offset_y": 20.00000000,
+      "interactable_enabled": true,
+      "script_path": "Resources/Scripts/GoldPieceCollectable.lua",
+      "script_enabled": true,
+      "script_hot_reload": true,
+      "inventory_gold": 0,
+      "inventory_capacity": 0
+    },
+    {
+      "kind": 1,
+      "name": "Gold Ingot",
+      "pos": [
+        2435.94140625,
+        581.01672363
+      ],
+      "rot": 0.00000000,
+      "sprite_size": [
+        58.33333206,
+        58.33333206
+      ],
+      "sprite_color": [
+        1.00000000,
+        1.00000000,
+        1.00000000,
+        1.00000000
+      ],
+      "sprite_origin": [
+        0.50000000,
+        0.50000000
+      ],
+      "sprite_uv_min": [
+        0.00000000,
+        0.00000000
+      ],
+      "sprite_uv_max": [
+        1.00000000,
+        1.00000000
+      ],
+      "sprite_layer": 100,
+      "collider_shape": 0,
+      "collider_half_extends": [
+        10.00000000,
+        10.00000000
+      ],
+      "collider_radius": 0.00000000,
+      "collider_is_trigger": false,
+      "rb_body_type": 1,
+      "rb_fixed_rotation": true,
+      "rb_linear_damping": 8.00000000,
+      "rb_gravity_scale": 0.00000000,
+      "interactable_prompt_text": "Gold Ingot",
+      "interactable_radius": 100.00000000,
+      "interactable_popup_offset_y": 20.00000000,
+      "interactable_enabled": true,
+      "script_path": "Resources/Scripts/GoldPieceCollectable.lua",
+      "script_enabled": true,
+      "script_hot_reload": true,
+      "inventory_gold": 0,
+      "inventory_capacity": 0
+    },
+    {
+      "kind": 1,
+      "name": "Gold Ingot",
+      "pos": [
+        2001.17956543,
+        534.82623291
+      ],
+      "rot": 0.00000000,
+      "sprite_size": [
+        58.33333206,
+        58.33333206
+      ],
+      "sprite_color": [
+        1.00000000,
+        1.00000000,
+        1.00000000,
+        1.00000000
+      ],
+      "sprite_origin": [
+        0.50000000,
+        0.50000000
+      ],
+      "sprite_uv_min": [
+        0.00000000,
+        0.00000000
+      ],
+      "sprite_uv_max": [
+        1.00000000,
+        1.00000000
+      ],
+      "sprite_layer": 100,
+      "collider_shape": 0,
+      "collider_half_extends": [
+        10.00000000,
+        10.00000000
+      ],
+      "collider_radius": 0.00000000,
+      "collider_is_trigger": false,
+      "rb_body_type": 1,
+      "rb_fixed_rotation": true,
+      "rb_linear_damping": 8.00000000,
+      "rb_gravity_scale": 0.00000000,
+      "interactable_prompt_text": "Gold Ingot",
+      "interactable_radius": 100.00000000,
+      "interactable_popup_offset_y": 20.00000000,
+      "interactable_enabled": true,
+      "script_path": "Resources/Scripts/GoldPieceCollectable.lua",
+      "script_enabled": true,
+      "script_hot_reload": true,
+      "inventory_gold": 0,
+      "inventory_capacity": 0
+    },
+    {
+      "kind": 0,
+      "name": "Minecart",
+      "pos": [
+        2402.65576172,
+        1102.00109863
+      ],
+      "rot": 0.00000000,
+      "sprite_size": [
+        99.20000458,
+        99.20000458
+      ],
+      "sprite_color": [
+        1.00000000,
+        1.00000000,
+        1.00000000,
+        1.00000000
+      ],
+      "sprite_origin": [
+        0.50000000,
+        0.69999999
+      ],
+      "sprite_uv_min": [
+        0.00000000,
+        0.00000000
+      ],
+      "sprite_uv_max": [
+        1.00000000,
+        1.00000000
+      ],
+      "sprite_layer": 100,
+      "collider_shape": 0,
+      "collider_half_extends": [
+        30.00000000,
+        20.00000000
+      ],
+      "collider_radius": 0.00000000,
+      "collider_is_trigger": false,
+      "rb_body_type": 1,
+      "rb_fixed_rotation": true,
+      "rb_linear_damping": 500.00000000,
+      "rb_gravity_scale": 0.00000000,
+      "interactable_prompt_text": "Minecart",
+      "interactable_radius": 100.00000000,
+      "interactable_popup_offset_y": 45.00000000,
+      "interactable_enabled": true,
+      "script_path": "Resources/Scripts/Minecart.lua",
+      "script_enabled": true,
+      "script_hot_reload": true,
+      "inventory_gold": 0,
+      "inventory_capacity": 10
+    },
+    {
+      "kind": 1,
+      "name": "Gold Ingot",
+      "pos": [
+        1688.82543945,
+        508.42025757
+      ],
+      "rot": 0.00000000,
+      "sprite_size": [
+        58.33333206,
+        58.33333206
+      ],
+      "sprite_color": [
+        1.00000000,
+        1.00000000,
+        1.00000000,
+        1.00000000
+      ],
+      "sprite_origin": [
+        0.50000000,
+        0.50000000
+      ],
+      "sprite_uv_min": [
+        0.00000000,
+        0.00000000
+      ],
+      "sprite_uv_max": [
+        1.00000000,
+        1.00000000
+      ],
+      "sprite_layer": 100,
+      "collider_shape": 0,
+      "collider_half_extends": [
+        10.00000000,
+        10.00000000
+      ],
+      "collider_radius": 0.00000000,
+      "collider_is_trigger": false,
+      "rb_body_type": 1,
+      "rb_fixed_rotation": true,
+      "rb_linear_damping": 8.00000000,
+      "rb_gravity_scale": 0.00000000,
+      "interactable_prompt_text": "Gold Ingot",
+      "interactable_radius": 100.00000000,
+      "interactable_popup_offset_y": 20.00000000,
+      "interactable_enabled": true,
+      "script_path": "Resources/Scripts/GoldPieceCollectable.lua",
+      "script_enabled": true,
+      "script_hot_reload": true,
+      "inventory_gold": 0,
+      "inventory_capacity": 0
+    },
+    {
+      "kind": 1,
+      "name": "Gold Ingot",
+      "pos": [
+        1643.08337402,
+        963.39758301
+      ],
+      "rot": 0.00000000,
+      "sprite_size": [
+        58.33333206,
+        58.33333206
+      ],
+      "sprite_color": [
+        1.00000000,
+        1.00000000,
+        1.00000000,
+        1.00000000
+      ],
+      "sprite_origin": [
+        0.50000000,
+        0.50000000
+      ],
+      "sprite_uv_min": [
+        0.00000000,
+        0.00000000
+      ],
+      "sprite_uv_max": [
+        1.00000000,
+        1.00000000
+      ],
+      "sprite_layer": 100,
+      "collider_shape": 0,
+      "collider_half_extends": [
+        10.00000000,
+        10.00000000
+      ],
+      "collider_radius": 0.00000000,
+      "collider_is_trigger": false,
+      "rb_body_type": 1,
+      "rb_fixed_rotation": true,
+      "rb_linear_damping": 8.00000000,
+      "rb_gravity_scale": 0.00000000,
+      "interactable_prompt_text": "Gold Ingot",
+      "interactable_radius": 100.00000000,
+      "interactable_popup_offset_y": 20.00000000,
+      "interactable_enabled": true,
+      "script_path": "Resources/Scripts/GoldPieceCollectable.lua",
+      "script_enabled": true,
+      "script_hot_reload": true,
+      "inventory_gold": 0,
+      "inventory_capacity": 0
+    },
+    {
+      "kind": 1,
+      "name": "Gold Ingot",
+      "pos": [
+        1204.51184082,
+        969.58807373
+      ],
+      "rot": 0.00000000,
+      "sprite_size": [
+        58.33333206,
+        58.33333206
+      ],
+      "sprite_color": [
+        1.00000000,
+        1.00000000,
+        1.00000000,
+        1.00000000
+      ],
+      "sprite_origin": [
+        0.50000000,
+        0.50000000
+      ],
+      "sprite_uv_min": [
+        0.00000000,
+        0.00000000
+      ],
+      "sprite_uv_max": [
+        1.00000000,
+        1.00000000
+      ],
+      "sprite_layer": 100,
+      "collider_shape": 0,
+      "collider_half_extends": [
+        10.00000000,
+        10.00000000
+      ],
+      "collider_radius": 0.00000000,
+      "collider_is_trigger": false,
+      "rb_body_type": 1,
+      "rb_fixed_rotation": true,
+      "rb_linear_damping": 8.00000000,
+      "rb_gravity_scale": 0.00000000,
+      "interactable_prompt_text": "Gold Ingot",
+      "interactable_radius": 100.00000000,
+      "interactable_popup_offset_y": 20.00000000,
+      "interactable_enabled": true,
+      "script_path": "Resources/Scripts/GoldPieceCollectable.lua",
+      "script_enabled": true,
+      "script_hot_reload": true,
+      "inventory_gold": 0,
+      "inventory_capacity": 0
+    },
+    {
+      "kind": 1,
+      "name": "Gold Ingot",
+      "pos": [
+        1975.46447754,
+        736.73077393
+      ],
+      "rot": 0.00000000,
+      "sprite_size": [
+        58.33333206,
+        58.33333206
+      ],
+      "sprite_color": [
+        1.00000000,
+        1.00000000,
+        1.00000000,
+        1.00000000
+      ],
+      "sprite_origin": [
+        0.50000000,
+        0.50000000
+      ],
+      "sprite_uv_min": [
+        0.00000000,
+        0.00000000
+      ],
+      "sprite_uv_max": [
+        1.00000000,
+        1.00000000
+      ],
+      "sprite_layer": 100,
+      "collider_shape": 0,
+      "collider_half_extends": [
+        10.00000000,
+        10.00000000
+      ],
+      "collider_radius": 0.00000000,
+      "collider_is_trigger": false,
+      "rb_body_type": 1,
+      "rb_fixed_rotation": true,
+      "rb_linear_damping": 8.00000000,
+      "rb_gravity_scale": 0.00000000,
+      "interactable_prompt_text": "Gold Ingot",
+      "interactable_radius": 100.00000000,
+      "interactable_popup_offset_y": 20.00000000,
+      "interactable_enabled": true,
+      "script_path": "Resources/Scripts/GoldPieceCollectable.lua",
+      "script_enabled": true,
+      "script_hot_reload": true,
+      "inventory_gold": 0,
+      "inventory_capacity": 0
+    },
+    {
+      "kind": 1,
+      "name": "Gold Ingot",
+      "pos": [
+        2268.32153320,
+        864.35003662
+      ],
+      "rot": 0.00000000,
+      "sprite_size": [
+        58.33333206,
+        58.33333206
+      ],
+      "sprite_color": [
+        1.00000000,
+        1.00000000,
+        1.00000000,
+        1.00000000
+      ],
+      "sprite_origin": [
+        0.50000000,
+        0.50000000
+      ],
+      "sprite_uv_min": [
+        0.00000000,
+        0.00000000
+      ],
+      "sprite_uv_max": [
+        1.00000000,
+        1.00000000
+      ],
+      "sprite_layer": 100,
+      "collider_shape": 0,
+      "collider_half_extends": [
+        10.00000000,
+        10.00000000
+      ],
+      "collider_radius": 0.00000000,
+      "collider_is_trigger": false,
+      "rb_body_type": 1,
+      "rb_fixed_rotation": true,
+      "rb_linear_damping": 8.00000000,
+      "rb_gravity_scale": 0.00000000,
+      "interactable_prompt_text": "Gold Ingot",
+      "interactable_radius": 100.00000000,
+      "interactable_popup_offset_y": 20.00000000,
+      "interactable_enabled": true,
+      "script_path": "Resources/Scripts/GoldPieceCollectable.lua",
+      "script_enabled": true,
+      "script_hot_reload": true,
+      "inventory_gold": 0,
+      "inventory_capacity": 0
+    },
+    {
+      "kind": 1,
+      "name": "Gold Ingot",
+      "pos": [
+        1804.98864746,
+        544.34997559
+      ],
+      "rot": 0.00000000,
+      "sprite_size": [
+        58.33333206,
+        58.33333206
+      ],
+      "sprite_color": [
+        1.00000000,
+        1.00000000,
+        1.00000000,
+        1.00000000
+      ],
+      "sprite_origin": [
+        0.50000000,
+        0.50000000
+      ],
+      "sprite_uv_min": [
+        0.00000000,
+        0.00000000
+      ],
+      "sprite_uv_max": [
+        1.00000000,
+        1.00000000
+      ],
+      "sprite_layer": 100,
+      "collider_shape": 0,
+      "collider_half_extends": [
+        10.00000000,
+        10.00000000
+      ],
+      "collider_radius": 0.00000000,
+      "collider_is_trigger": false,
+      "rb_body_type": 1,
+      "rb_fixed_rotation": true,
+      "rb_linear_damping": 8.00000000,
+      "rb_gravity_scale": 0.00000000,
+      "interactable_prompt_text": "Gold Ingot",
+      "interactable_radius": 100.00000000,
+      "interactable_popup_offset_y": 20.00000000,
+      "interactable_enabled": true,
+      "script_path": "Resources/Scripts/GoldPieceCollectable.lua",
+      "script_enabled": true,
+      "script_hot_reload": true,
+      "inventory_gold": 0,
+      "inventory_capacity": 0
+    },
+    {
+      "kind": 1,
+      "name": "Gold Ingot",
+      "pos": [
+        1934.03613281,
+        454.34994507
+      ],
+      "rot": 0.00000000,
+      "sprite_size": [
+        58.33333206,
+        58.33333206
+      ],
+      "sprite_color": [
+        1.00000000,
+        1.00000000,
+        1.00000000,
+        1.00000000
+      ],
+      "sprite_origin": [
+        0.50000000,
+        0.50000000
+      ],
+      "sprite_uv_min": [
+        0.00000000,
+        0.00000000
+      ],
+      "sprite_uv_max": [
+        1.00000000,
+        1.00000000
+      ],
+      "sprite_layer": 100,
+      "collider_shape": 0,
+      "collider_half_extends": [
+        10.00000000,
+        10.00000000
+      ],
+      "collider_radius": 0.00000000,
+      "collider_is_trigger": false,
+      "rb_body_type": 1,
+      "rb_fixed_rotation": true,
+      "rb_linear_damping": 8.00000000,
+      "rb_gravity_scale": 0.00000000,
+      "interactable_prompt_text": "Gold Ingot",
+      "interactable_radius": 100.00000000,
+      "interactable_popup_offset_y": 20.00000000,
+      "interactable_enabled": true,
+      "script_path": "Resources/Scripts/GoldPieceCollectable.lua",
+      "script_enabled": true,
+      "script_hot_reload": true,
+      "inventory_gold": 0,
+      "inventory_capacity": 0
     }
   ]
 }

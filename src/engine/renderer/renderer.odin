@@ -12,7 +12,6 @@ import "core:fmt"
 Init :: proc(_renderer : ^Renderer, _platform : ^platform.Platform, _vert_code, _frag_code : []u8) -> bool {
     _renderer.gpu = _platform.gpu
     _renderer.window = _platform.window
-    _renderer.clear_color = {0.0, 0.2, 0.4, 1.0} // #TODO: move somewhere else
 
     _renderer.camera.position = glm.vec2{0,0}
     _renderer.camera.zoom = 1.0
