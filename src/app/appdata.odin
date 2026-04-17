@@ -13,6 +13,11 @@ import "../engine/physics"
 import "../engine/scripting"
 import "../engine/gameplayGUI"
 
+///
+/// This file declares all the main type objects for running the application.
+///
+
+
 default_context : runtime.Context // #TODO: hook this up with sdl platform
 
 // Maintains state of the whole application

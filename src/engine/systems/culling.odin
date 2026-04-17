@@ -6,7 +6,8 @@ import "../components"
 import "../renderdata"
 import "../tilemap"
 
-// #TODO: comment this 
+// This is used by the system_Render.odin file to cull entities outside of the view frustrum
+// A bunch of helper to calculate tilemap & entity positions.
 
 @private
 RectOverlaps :: proc(_a, _b : renderdata.Rect2D) -> bool {

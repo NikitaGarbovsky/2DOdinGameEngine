@@ -6,8 +6,12 @@ import sdl "vendor:sdl3"
 import glm "core:math/linalg/glsl"
 import renderdata "../renderdata"
 
-// #TODO: comment this 
+///
+/// Type declaration file for the renderer.
+///
 
+
+// The FAT ASS STRUCT object holding the entire renderers state.
 Renderer :: struct {
     gpu : ^sdl.GPUDevice,
     window : ^sdl.Window,

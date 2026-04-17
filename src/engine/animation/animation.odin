@@ -6,7 +6,10 @@ import "../renderdata"
 import glm "core:math/linalg"
 import "core:fmt"
 
-// #TODO: comment all this.
+///
+/// This horrendous hardcoded module contains the means of loading and using animation in the engine.
+/// #TODO: Remove hardcoded stuff and dynamically load this data through editor initialization.
+///
 
 
 LoadEntityAnimations :: proc(_renderer : ^renderer.Renderer) {
@@ -141,6 +144,7 @@ LoadSpriteSheets :: proc(
     _animation_bank.directional_sets[_animationLabel] = directional_clips
 }
 
+// Movement is velocity based, so we use that velocity to dictate the correct sprite direction to load.
 SetAnimationDirectionFromMovementVelocity :: proc(_movementDirection : glm.Vector2f32, _animationPlayer : ^Animation_Player) {
     switch _movementDirection {
         case {0, 0}: // No movement, default to the current direction

@@ -6,8 +6,8 @@ import glm "core:math/linalg"
 ///
 /// Contains the type definitions for use throughout the animation system.
 ///
-/// #TODO: Comment this.
 
+// Contains all the directional animation clips.
 Animation_Bank :: struct {
     directional_sets : map[string][8]Animation_Clip,
 }
@@ -16,6 +16,7 @@ player_anim_bank : Animation_Bank
 minecart_anim_bank : Animation_Bank
 goldingot_anim_bank : Animation_Bank
 
+// Represents a frame of animation.
 Animation_Frame :: struct {
     uv_min : glm.Vector2f32,
     uv_max : glm.Vector2f32,
@@ -24,6 +25,7 @@ Animation_Frame :: struct {
     size : glm.Vector2f32,
 }
 
+// Represents a full animation clip
 Animation_Clip :: struct {
     name : string, 
     frames : []Animation_Frame,
@@ -32,6 +34,7 @@ Animation_Clip :: struct {
     texture : renderdata.Texture_Handle,
 }
 
+// Used by the Animation component to run animations on the entity.
 Animation_Player :: struct {
     current_clip : Animation_Clip,
     current_frame : int,
@@ -44,6 +47,7 @@ Animation_Player :: struct {
     current_direction : Animation_Direction,
 }
 
+// Engine supports 8 isometric sprite directions
 Animation_Direction :: enum u8 {
     South,
     SouthEast,

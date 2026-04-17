@@ -4,7 +4,11 @@ import math "core:math/linalg"
 import renderdata "../renderdata"
 import "../animation"
 
-// #TODO: comment this 
+///
+/// Declaration file for all the component object types. 
+/// (all are in use expect trigger)
+/// All components are accessable in dear_imgui editor
+///
 
 Component_Flag :: enum u16 {
     Name, 
@@ -24,10 +28,12 @@ ComponentMask :: proc(_flag : Component_Flag) -> u16 {
     return u16(1) << u16(_flag)
 }
 
+// Name of the entity
 Name :: struct {
     entityName : string,
 }
 
+// Standard 2D transform
 Transform :: struct {
     pos : math.Vector2f32,
     rot : f32,
@@ -50,6 +56,7 @@ Collider_Shape :: enum u8 {
     Circle,
 }
 
+// The physics collider for the entity (box/circle only)
 Collider :: struct {
     shape : Collider_Shape,
     half_extends : math.Vector2f32,
@@ -57,12 +64,14 @@ Collider :: struct {
     is_trigger : bool,
 }
 
+// Box2D Physics rigid body type
 Rigid_Body_Type :: enum u8 {
     Static,
     Dynamic,
     Kinematic
 }
 
+// Box2D Physics rigid body 
 Rigid_Body :: struct {
     body_type : Rigid_Body_Type,
     fixed_rotation : bool, // No rotation cause isometric
@@ -70,6 +79,7 @@ Rigid_Body :: struct {
     gravity_scale : f32, // No gravity cause isometric
 }
 
+// Mouse over interactable, left-click to interact
 Interactable :: struct {
     prompt_text : string,
     interaction_radius : f32,
@@ -97,6 +107,7 @@ Animator :: struct {
     bank : ^animation.Animation_Bank,
 } 
 
+// The inventory allowing player to collect gold for the minecart.
 Inventory :: struct {
     gold : i32,
     capacity : i32 // 0 means unlimited capacity

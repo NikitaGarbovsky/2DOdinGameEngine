@@ -6,7 +6,7 @@ import "core:sync"
 import "base:runtime"
 import "core:strings"
 
-// #TODO: comment this 
+// Manages the file dialogue that occurs from loading/saving tilemap.
 
 LEVEL_FILE_SUFFIX :: ".level.json"
 

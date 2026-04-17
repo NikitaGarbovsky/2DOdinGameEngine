@@ -2,8 +2,12 @@ package ecs
 
 import components "../components"
 
-// #TODO: comment this 
+///
+/// Defines the object types for the ECS. 
+///
 
+
+// An entity for the ECS 
 Entity :: struct {
     id : u32
     // #TODO: might want to add other information about entities when they're created, generation, reason for creation etc.

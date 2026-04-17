@@ -2,7 +2,9 @@ package renderdata
 
 import glm "core:math/linalg/glsl"
 
-// #TODO: comment this 
+///
+/// Helper for getting the 2D sprite matrix, could probably put somewhere else
+///
 
 MakeSpriteModelMatrix :: proc(pos : [2]f32,
 size : [2]f32, origin : [2]f32, rot : f32, layer : f32) -> glm.mat4 {

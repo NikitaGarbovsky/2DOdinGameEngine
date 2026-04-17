@@ -6,8 +6,197 @@ import renderdata "../renderdata"
 import glm "core:math/linalg"
 import "core:fmt"
 
-// #TODO: comment this 
+///
+/// This file declares the full sort & batched rendering pipeline used by the renderer.
+///
 
+// Initializes the sprite pipeline, loads the shaders and preps resources for the renderer.
+InitSpritePipeline :: proc(_renderer : ^Renderer, _vert_code, _frag_code : []u8) -> bool {
+    
+    vert_shader_info := sdl.GPUShaderCreateInfo{
+        code_size            = len(_vert_code),
+        code                 = raw_data(_vert_code),
+        entrypoint           = "main",
+        format               = {.SPIRV},
+        stage                = .VERTEX,
+        num_samplers         = 0,
+        num_storage_textures = 0,
+        num_storage_buffers  = 0,
+        num_uniform_buffers  = 1,
+        props                = 0,
+    }
+
+    frag_shader_info := sdl.GPUShaderCreateInfo{
+        code_size            = len(_frag_code),
+        code                 = raw_data(_frag_code),
+        entrypoint           = "main",
+        format               = {.SPIRV},
+        stage                = .FRAGMENT,
+        num_samplers         = 1,
+        num_storage_textures = 0,
+        num_storage_buffers  = 0,
+        num_uniform_buffers  = 0,
+        props                = 0,
+    }
+
+    vert_shader := sdl.CreateGPUShader(_renderer.gpu, vert_shader_info)
+    if vert_shader == nil {
+        log.errorf("CreateGPUShader sprite vertex failed: {}", sdl.GetError())
+        return false
+    }
+
+    frag_shader := sdl.CreateGPUShader(_renderer.gpu, frag_shader_info)
+    if frag_shader == nil {
+        log.errorf("CreateGPUShader sprite fragment failed: {}", sdl.GetError())
+        sdl.ReleaseGPUShader(_renderer.gpu, vert_shader)
+        return false
+    }
+
+    vertex_buffer_descs := [2]sdl.GPUVertexBufferDescription{
+        {
+            slot               = 0,
+            pitch              = u32(size_of(Quad_Vertex)),
+            input_rate         = .VERTEX,
+            instance_step_rate = 0,
+        },
+        {
+            slot               = 1,
+            pitch              = u32(size_of(renderdata.Sprite_Instance)),
+            input_rate         = .INSTANCE,
+            instance_step_rate = 0,
+        },
+    }
+
+    // locations 2 - 5 are passed in as .FLOAT4's (modelmatrix), but when they reach 
+    // the gpu the v shader accepts them as a single mat4, not sure why or how,
+    vertex_attrs := [9]sdl.GPUVertexAttribute{
+        { // Local position
+            location    = 0,
+            buffer_slot = 0,
+            format      = .FLOAT2,
+            offset      = u32(offset_of(Quad_Vertex, local_pos)),
+        },
+        { // UV
+            location    = 1,
+            buffer_slot = 0,
+            format      = .FLOAT2,
+            offset      = u32(offset_of(Quad_Vertex, uv)),
+        },
+        { // model matrix column 1
+            location    = 2,
+            buffer_slot = 1,
+            format      = .FLOAT4,
+            offset      = u32(offset_of(renderdata.Sprite_Instance, model)) + 0,
+        },
+        { // model matrix column 2
+            location    = 3,
+            buffer_slot = 1,
+            format      = .FLOAT4,
+            offset      = u32(offset_of(renderdata.Sprite_Instance, model)) + 16,
+        },
+        { // model matrix column 3
+            location    = 4,
+            buffer_slot = 1,
+            format      = .FLOAT4,
+            offset      = u32(offset_of(renderdata.Sprite_Instance, model)) + 32,
+        },
+        { // model matrix column 4
+            location    = 5,
+            buffer_slot = 1,
+            format      = .FLOAT4,
+            offset      = u32(offset_of(renderdata.Sprite_Instance, model)) + 48,
+        },
+        {
+            location    = 6,
+            buffer_slot = 1,
+            format      = .FLOAT2,
+            offset      = u32(offset_of(renderdata.Sprite_Instance, uv_min)),
+        },
+        {
+            location    = 7,
+            buffer_slot = 1,
+            format      = .FLOAT2,
+            offset      = u32(offset_of(renderdata.Sprite_Instance, uv_max)),
+        },
+        {
+            location    = 8,
+            buffer_slot = 1,
+            format      = .FLOAT4,
+            offset      = u32(offset_of(renderdata.Sprite_Instance, color)),
+        },
+    }
+
+    color_target_desc := sdl.GPUColorTargetDescription{
+        format = sdl.GetGPUSwapchainTextureFormat(_renderer.gpu, _renderer.window),
+        blend_state = sdl.GPUColorTargetBlendState{
+            src_color_blendfactor = .SRC_ALPHA,
+            dst_color_blendfactor = .ONE_MINUS_SRC_ALPHA,
+            color_blend_op        = .ADD,
+            src_alpha_blendfactor = .SRC_ALPHA,
+            dst_alpha_blendfactor = .ONE_MINUS_SRC_ALPHA,
+            alpha_blend_op        = .ADD,
+            enable_blend          = true,
+            enable_color_write_mask = false,
+        },
+    }
+
+    pipeline_info := sdl.GPUGraphicsPipelineCreateInfo{
+        vertex_shader   = vert_shader,
+        fragment_shader = frag_shader,
+
+        vertex_input_state = sdl.GPUVertexInputState{
+            vertex_buffer_descriptions = &vertex_buffer_descs[0],
+            num_vertex_buffers         = 2,
+            vertex_attributes          = &vertex_attrs[0],
+            num_vertex_attributes      = len(vertex_attrs),
+        },
+
+        primitive_type = .TRIANGLELIST,
+
+        rasterizer_state = sdl.GPURasterizerState{
+            fill_mode         = .FILL,
+            cull_mode         = .NONE,
+            front_face        = .COUNTER_CLOCKWISE,
+            enable_depth_bias = false,
+            enable_depth_clip = true,
+        },
+
+        multisample_state = sdl.GPUMultisampleState{
+            sample_count              = ._1,
+            sample_mask               = 0,
+            enable_mask               = false,
+            enable_alpha_to_coverage  = false,
+        },
+
+        depth_stencil_state = sdl.GPUDepthStencilState{
+            compare_op          = .ALWAYS,
+            enable_depth_test   = false,
+            enable_depth_write  = false,
+            enable_stencil_test = false,
+        },
+
+        target_info = sdl.GPUGraphicsPipelineTargetInfo{
+            color_target_descriptions = &color_target_desc,
+            num_color_targets         = 1,
+            depth_stencil_format      = .INVALID,
+            has_depth_stencil_target  = false,
+        },
+
+        props = 0,
+    }
+
+    _renderer.sprite_pipeline = sdl.CreateGPUGraphicsPipeline(_renderer.gpu, pipeline_info)
+
+    sdl.ReleaseGPUShader(_renderer.gpu, vert_shader)
+    sdl.ReleaseGPUShader(_renderer.gpu, frag_shader)
+
+    if _renderer.sprite_pipeline == nil {
+        log.errorf("CreateGPUGraphicsPipeline sprite failed: {}", sdl.GetError())
+        return false
+    }
+
+    return true
+}
 
 /// Comparison used when sorting render items before batching.
 // 1. Render pass first
@@ -269,192 +458,7 @@ BuildBatches :: proc(
     })
 }
 
-InitSpritePipeline :: proc(_renderer : ^Renderer, _vert_code, _frag_code : []u8) -> bool {
-    
-    vert_shader_info := sdl.GPUShaderCreateInfo{
-        code_size            = len(_vert_code),
-        code                 = raw_data(_vert_code),
-        entrypoint           = "main",
-        format               = {.SPIRV},
-        stage                = .VERTEX,
-        num_samplers         = 0,
-        num_storage_textures = 0,
-        num_storage_buffers  = 0,
-        num_uniform_buffers  = 1,
-        props                = 0,
-    }
 
-    frag_shader_info := sdl.GPUShaderCreateInfo{
-        code_size            = len(_frag_code),
-        code                 = raw_data(_frag_code),
-        entrypoint           = "main",
-        format               = {.SPIRV},
-        stage                = .FRAGMENT,
-        num_samplers         = 1,
-        num_storage_textures = 0,
-        num_storage_buffers  = 0,
-        num_uniform_buffers  = 0,
-        props                = 0,
-    }
-
-    vert_shader := sdl.CreateGPUShader(_renderer.gpu, vert_shader_info)
-    if vert_shader == nil {
-        log.errorf("CreateGPUShader sprite vertex failed: {}", sdl.GetError())
-        return false
-    }
-
-    frag_shader := sdl.CreateGPUShader(_renderer.gpu, frag_shader_info)
-    if frag_shader == nil {
-        log.errorf("CreateGPUShader sprite fragment failed: {}", sdl.GetError())
-        sdl.ReleaseGPUShader(_renderer.gpu, vert_shader)
-        return false
-    }
-
-    vertex_buffer_descs := [2]sdl.GPUVertexBufferDescription{
-        {
-            slot               = 0,
-            pitch              = u32(size_of(Quad_Vertex)),
-            input_rate         = .VERTEX,
-            instance_step_rate = 0,
-        },
-        {
-            slot               = 1,
-            pitch              = u32(size_of(renderdata.Sprite_Instance)),
-            input_rate         = .INSTANCE,
-            instance_step_rate = 0,
-        },
-    }
-
-    // locations 2 - 5 are passed in as .FLOAT4's (modelmatrix), but when they reach 
-    // the gpu the v shader accepts them as a single mat4, not sure why or how,
-    vertex_attrs := [9]sdl.GPUVertexAttribute{
-        { // Local position
-            location    = 0,
-            buffer_slot = 0,
-            format      = .FLOAT2,
-            offset      = u32(offset_of(Quad_Vertex, local_pos)),
-        },
-        { // UV
-            location    = 1,
-            buffer_slot = 0,
-            format      = .FLOAT2,
-            offset      = u32(offset_of(Quad_Vertex, uv)),
-        },
-        { // model matrix column 1
-            location    = 2,
-            buffer_slot = 1,
-            format      = .FLOAT4,
-            offset      = u32(offset_of(renderdata.Sprite_Instance, model)) + 0,
-        },
-        { // model matrix column 2
-            location    = 3,
-            buffer_slot = 1,
-            format      = .FLOAT4,
-            offset      = u32(offset_of(renderdata.Sprite_Instance, model)) + 16,
-        },
-        { // model matrix column 3
-            location    = 4,
-            buffer_slot = 1,
-            format      = .FLOAT4,
-            offset      = u32(offset_of(renderdata.Sprite_Instance, model)) + 32,
-        },
-        { // model matrix column 4
-            location    = 5,
-            buffer_slot = 1,
-            format      = .FLOAT4,
-            offset      = u32(offset_of(renderdata.Sprite_Instance, model)) + 48,
-        },
-        {
-            location    = 6,
-            buffer_slot = 1,
-            format      = .FLOAT2,
-            offset      = u32(offset_of(renderdata.Sprite_Instance, uv_min)),
-        },
-        {
-            location    = 7,
-            buffer_slot = 1,
-            format      = .FLOAT2,
-            offset      = u32(offset_of(renderdata.Sprite_Instance, uv_max)),
-        },
-        {
-            location    = 8,
-            buffer_slot = 1,
-            format      = .FLOAT4,
-            offset      = u32(offset_of(renderdata.Sprite_Instance, color)),
-        },
-    }
-
-    color_target_desc := sdl.GPUColorTargetDescription{
-        format = sdl.GetGPUSwapchainTextureFormat(_renderer.gpu, _renderer.window),
-        blend_state = sdl.GPUColorTargetBlendState{
-            src_color_blendfactor = .SRC_ALPHA,
-            dst_color_blendfactor = .ONE_MINUS_SRC_ALPHA,
-            color_blend_op        = .ADD,
-            src_alpha_blendfactor = .SRC_ALPHA,
-            dst_alpha_blendfactor = .ONE_MINUS_SRC_ALPHA,
-            alpha_blend_op        = .ADD,
-            enable_blend          = true,
-            enable_color_write_mask = false,
-        },
-    }
-
-    pipeline_info := sdl.GPUGraphicsPipelineCreateInfo{
-        vertex_shader   = vert_shader,
-        fragment_shader = frag_shader,
-
-        vertex_input_state = sdl.GPUVertexInputState{
-            vertex_buffer_descriptions = &vertex_buffer_descs[0],
-            num_vertex_buffers         = 2,
-            vertex_attributes          = &vertex_attrs[0],
-            num_vertex_attributes      = len(vertex_attrs),
-        },
-
-        primitive_type = .TRIANGLELIST,
-
-        rasterizer_state = sdl.GPURasterizerState{
-            fill_mode         = .FILL,
-            cull_mode         = .NONE,
-            front_face        = .COUNTER_CLOCKWISE,
-            enable_depth_bias = false,
-            enable_depth_clip = true,
-        },
-
-        multisample_state = sdl.GPUMultisampleState{
-            sample_count              = ._1,
-            sample_mask               = 0,
-            enable_mask               = false,
-            enable_alpha_to_coverage  = false,
-        },
-
-        depth_stencil_state = sdl.GPUDepthStencilState{
-            compare_op          = .ALWAYS,
-            enable_depth_test   = false,
-            enable_depth_write  = false,
-            enable_stencil_test = false,
-        },
-
-        target_info = sdl.GPUGraphicsPipelineTargetInfo{
-            color_target_descriptions = &color_target_desc,
-            num_color_targets         = 1,
-            depth_stencil_format      = .INVALID,
-            has_depth_stencil_target  = false,
-        },
-
-        props = 0,
-    }
-
-    _renderer.sprite_pipeline = sdl.CreateGPUGraphicsPipeline(_renderer.gpu, pipeline_info)
-
-    sdl.ReleaseGPUShader(_renderer.gpu, vert_shader)
-    sdl.ReleaseGPUShader(_renderer.gpu, frag_shader)
-
-    if _renderer.sprite_pipeline == nil {
-        log.errorf("CreateGPUGraphicsPipeline sprite failed: {}", sdl.GetError())
-        return false
-    }
-
-    return true
-}
 
 // Sents all the batched render data to the gpu.
 SubmitRenderBatches :: proc(

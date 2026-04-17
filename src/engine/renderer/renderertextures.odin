@@ -5,8 +5,11 @@ import "core:log"
 import assets "../assets"
 import renderdata "../renderdata"
 
-// #TODO: comment this 
+///
+/// Has a bunch of helpers that is used to correctly create GPU resources for textures by various parts of the engine.
+///
 
+// Create a sampler resource
 CreateSampler :: proc(_renderer : ^Renderer, _info : sdl.GPUSamplerCreateInfo) -> (renderdata.Sampler_Handle, bool) {
     gpu_sampler := sdl.CreateGPUSampler(_renderer.gpu, _info)
     if gpu_sampler == nil {
@@ -19,6 +22,7 @@ CreateSampler :: proc(_renderer : ^Renderer, _info : sdl.GPUSamplerCreateInfo) -
     return handle, true
 }
 
+// Create a texture resource in the RGBA8 format
 CreateTextureRGBA8 :: proc(_renderer : ^Renderer, _pixels : []u8, _width, _height : u32) -> (renderdata.Texture_Handle, bool) {
     expected_bytes := int(_width * _height * 4)
     if len(_pixels) != expected_bytes {
@@ -115,6 +119,7 @@ CreateTextureRGBA8 :: proc(_renderer : ^Renderer, _pixels : []u8, _width, _heigh
     return handle, true
 }
 
+// Creates a texture resource from an loaded image
 CreateTextureFromImage :: proc(_renderer : ^Renderer, _image : assets.Image_Data) -> (renderdata.Texture_Handle, bool) {
     if _image.format != .RGBA8 {
         log.errorf("CreateTextureFromImage only supports RGBA8 right now, dumby you forgot to remove this")

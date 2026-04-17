@@ -7,8 +7,15 @@ import math "core:math/linalg"
 import glm "core:math/linalg/glsl"
 import "core:fmt"
 
-// #TODO: comment this 
+///
+/// This is the main renderer file contained within the renderer package. This manages the custom 
+/// rendering pipeline using the SDL3 GPU API utilizes a Vulkan backend. It uses a sort & batch 
+/// implementation for optimization, aswell as culling. The pipeline is based off a command buffer structure,
+/// rendering data is filled, configured, organized then pushed to the renderer to be rendered. 
+/// Its overkil as fuck but goddamnnnnnnnnnnnnnnnnnnnnnnnnn it run good.
+///
 
+// Intializes the rendering resources and backend.
 Init :: proc(_renderer : ^Renderer, _platform : ^platform.Platform, _vert_code, _frag_code : []u8) -> bool {
     _renderer.gpu = _platform.gpu
     _renderer.window = _platform.window
@@ -31,6 +38,7 @@ Init :: proc(_renderer : ^Renderer, _platform : ^platform.Platform, _vert_code, 
     return true
 }
 
+// Acquire command buffer to prep for it to be filled
 BeginFrame :: proc(_renderer : ^Renderer, viewport_size : math.Vector2f32) -> bool {
     _renderer.viewport_size = viewport_size
     _renderer.camera.viewport_size = viewport_size    
@@ -110,6 +118,7 @@ BeginUIPass :: proc(_renderer : ^Renderer) -> ^sdl.GPURenderPass {
     return pass
 }
 
+// Helper to end the frame
 EndFrame :: proc(_renderer : ^Renderer) {
     EndPass(_renderer) // End any existing passes, final step with ending the final render pass that is running.
 

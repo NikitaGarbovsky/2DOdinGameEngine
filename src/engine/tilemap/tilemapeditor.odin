@@ -6,7 +6,7 @@ import imgui "Dependencies:odin-imgui"
 import "core:strings"
 
 ///
-/// Manages the editing functionality of the tilemap.
+/// Manages the editing functionality of the tilemap. Mainly declars dear_imgui elements.
 ///
 
 

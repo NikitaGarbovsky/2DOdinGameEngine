@@ -4,18 +4,22 @@ import "core:log"
 import "core:strings"
 import stbi "vendor:stb/image"
 
-// #TODO: comment this 
+///
+/// Uses stb image library to load images for use by the sprite & animation systems.
+///
 
+// #TODO add more pixel formats when necessary.
 Image_Pixel_Format :: enum u8 {
     RGBA8,
 }
 
+// Represents an image.
 Image_Data :: struct {
     pixels : [dynamic]u8,
     width : u32,
     height : u32,
-    source_channels : u8, // channels in the source file
-    bytes_per_pixel : u8, // bytes per output pixel; default always 4
+    source_channels : u8, // Channels in the source file
+    bytes_per_pixel : u8, // Bytes per output pixel. Default always 4
     format : Image_Pixel_Format,
 }
 
@@ -23,6 +27,7 @@ ImageByteCount :: proc(_image : Image_Data) -> int {
     return int(_image.width) * int(_image.height) * int(_image.bytes_per_pixel)
 }
 
+// Loads an image file and returns it's data in a means the engine can utilize it in.
 LoadImageFile :: proc(_path : string, _flip_vertical := false) -> (Image_Data, bool) {
     if len(_path) == 0 {
         log.error("LoadImageFile called without path")
@@ -75,6 +80,7 @@ LoadImageFile :: proc(_path : string, _flip_vertical := false) -> (Image_Data, b
     return image, true
 }
 
+// Destroys a image and frees its resources.
 DestroyImage :: proc(_image : ^Image_Data) {
     if _image == nil do return
 

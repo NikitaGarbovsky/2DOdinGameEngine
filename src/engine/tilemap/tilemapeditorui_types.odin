@@ -2,7 +2,7 @@ package tilemap
 
 /// 
 /// Yeah so these are hardcoded positions of tiles from the sprite sheet, as 
-/// there is no automated functioning importer.
+/// there is no automated functioning importer. This sucks and I hate it.
 ///
 
 

@@ -4,7 +4,7 @@ import sdl "vendor:sdl3"
 import "base:runtime"
 import "core:fmt"
 
-// #TODO: comment this 
+// This manages the platform (sdl3) windowing and intiatilization.
 
 Platform :: struct {
     window : ^sdl.Window,

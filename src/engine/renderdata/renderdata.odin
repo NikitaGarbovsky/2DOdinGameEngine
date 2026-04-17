@@ -2,7 +2,10 @@ package renderdata
 
 import glm "core:math/linalg/glsl"
 
-// #TODO: comment this 
+///
+/// Defines a bunch of render types used by the renderer & other parts of
+/// the engine, like the gameplay gui.
+///
 
 Camera2D :: struct {
     position : glm.vec2, // world-space center of the camera
@@ -15,10 +18,11 @@ Rect2D :: struct {
     max : glm.vec2,
 }
 
+// Defines a kind of renderpass
 Render_Pass :: enum u8 {
     World,
     UI,
-    Debug,
+    Debug, // #TODO: currently unused as no debug visualization
 }
 
 // Sorting layers for entity sprites & tilemap tiles
@@ -29,9 +33,6 @@ FOREGROUND_SORT_LAYER :: i32(200)
 // Data for the rendered Sprite
 Sprite_Instance :: struct {
     model : glm.mat4,
-    // min & max are used to dictate a smaller rect for the sprite to sample from,
-    // for future sprite sheets, animation, optimizations of gpu texture sending etc..
-    // #TODO: Use this for animation when implemented!
     uv_min : [2]f32, 
     uv_max : [2]f32,
     color : [4]f32, // vec4

@@ -5,7 +5,6 @@ import glm "core:math/linalg/glsl"
 ///
 /// Bunch of helpers to manage 2D Camera functionality
 ///
-// #TODO: comment this 
 
 // Used by input mouse scroll
 CameraZoomIn :: proc(_cam : ^Camera2D, _delta : f32) {
@@ -17,6 +16,7 @@ CameraZoomOut :: proc(_cam : ^Camera2D, _delta : f32) {
     _cam.zoom = max(1, _cam.zoom + _delta / 10)
 }
 
+// Returns the view matrix of the 2D camera
 CameraViewMatrix :: proc(_cam : ^Camera2D) -> glm.mat4 {
     half_view := glm.vec3 {
         _cam.viewport_size[0] * 0.5,
@@ -31,15 +31,19 @@ CameraViewMatrix :: proc(_cam : ^Camera2D) -> glm.mat4 {
     return to_screen_center * zoom * move_world
 }
 
+// Returns the projection matrix for the camera.
 CameraProjMatrix :: proc(_cam : ^Camera2D) -> glm.mat4 {
     return glm.mat4Ortho3d(0, _cam.viewport_size[0], _cam.viewport_size[1],
     0, -1, 1)
 }
 
+// Returns the viewproj matrix of the camerea, this is primarily used 
+// for passing this to the renderer for shaders
 CameraViewProjMatrix :: proc(_cam : ^Camera2D) -> glm.mat4 {
     return CameraProjMatrix(_cam) * CameraViewMatrix(_cam)
 }
 
+// Returns a rect of the screen viewport size. Used for renderer culling.
 CameraWorldRect :: proc(_cam : ^Camera2D) -> Rect2D {
     half_w := (_cam.viewport_size[0] * 0.5) / _cam.zoom
     half_h := (_cam.viewport_size[1] * 0.5) / _cam.zoom
