@@ -3,6 +3,7 @@ package tilemap
 import "../renderdata"
 import sdl "vendor:sdl3"
 import "../renderer"
+import "core:fmt"
 
 ///
 /// Manages initialization and shutdown of the tilemap level
@@ -22,6 +23,8 @@ InitLevelState :: proc(_level : ^Level_State, _tile_w, _tile_h : f32) {
 
     _level.resources.tileset_texture = renderdata.Texture_Handle(0)
     _level.resources.tileset_meta_path = ""
+
+    fmt.printfln("--- Level resources Initialized Successfully.")
 }
 
 // Initializes editor state when using the tilemap editor.

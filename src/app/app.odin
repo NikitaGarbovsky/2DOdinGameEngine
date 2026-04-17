@@ -1,5 +1,6 @@
 package app
 
+import "core:fmt"
 import "../platform"
 import "../engine/ecs"
 import "../engine/renderer"
@@ -46,6 +47,8 @@ Init :: proc(_app : ^AppState) {
 	// Starting camera values
 	_app.renderer.camera.position = {960, 540}
 	_app.renderer.camera.zoom = 1.5
+
+	fmt.printfln("--- Engine Intialized Successfully.")
 
 	// Default to editor mode, also initializes editor.
 	EnterEditormode(_app) 
@@ -134,7 +137,7 @@ Run :: proc(_app : ^AppState) {
 				)
 				//systems.DebugClayCommandCounts(&clay_commands)
 				// Sends the gui layout data to the renderer to render
-				systems.RenderGameplayGUI(&_app.renderer, &clay_commands)
+				systems.RenderGameplayGUI(&_app.renderer, &_app.play_state.gameplay_ui ,&clay_commands)
 			}
 			if _app.mode == .Editor {
 				systems.EditorUIPass(editorContext) 

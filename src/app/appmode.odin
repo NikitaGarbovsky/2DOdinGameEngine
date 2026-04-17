@@ -41,6 +41,7 @@ EnterPlaymode :: proc(_app : ^AppState) {
     scripting.InitializeScripting(&_app.script_runtime)
     gameplayGUI.InitGameplayGUI(
         &_app.play_state.gameplay_ui,
+        &_app.renderer,
         f32(_app.platform.width),
         f32(_app.platform.height),
     )
@@ -306,7 +307,7 @@ CreateTestingInteractableEntity :: proc(_app : ^AppState, _spawnPos : [2]f32 = {
         &_app.world.interactables,
         interactableEntity,
         components.Interactable{
-            prompt_text = "Hello!",
+            prompt_text = "Gold Ingot",
             interaction_radius = 100,
             popup_offset_y = 20,
             enabled = true,
@@ -381,9 +382,9 @@ CreateMineCartEntity :: proc(_app : ^AppState, _spawnPos : [2]f32) {
         &_app.world.interactables,
         minecartEntity,
         components.Interactable{
-            prompt_text = "Hello!",
+            prompt_text = "Minecart",
             interaction_radius = 100,
-            popup_offset_y = 20,
+            popup_offset_y = 45,
             enabled = true,
         },
         .Interactable

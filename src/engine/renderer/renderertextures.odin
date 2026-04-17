@@ -173,6 +173,97 @@ CreateDefaultTextureAndSampler :: proc(_renderer : ^Renderer) -> bool {
 
     return true
 }
+
+// Uused by the gameplay gui to update the font glyph quad textures that are sent to 
+// the quad sprite render pipeline. Only runs on dirty atlas reuploads.
+UpdateTextureRGBA8 :: proc(
+    _renderer : ^Renderer,
+    _handle : renderdata.Texture_Handle,
+    _pixels : []u8,
+    _width, _height : u32,
+) -> bool {
+    idx := int(_handle)
+    if idx < 0 || idx >= len(_renderer.textures) {
+        log.error("UpdateTextureRGBA8 invalid texture handle")
+        return false
+    }
+
+    tex := _renderer.textures[idx].gpu
+    if tex == nil {
+        log.error("UpdateTextureRGBA8 texture gpu resource is nil")
+        return false
+    }
+
+    expected_bytes := int(_width * _height * 4)
+    if len(_pixels) != expected_bytes {
+        log.errorf(
+            "UpdateTextureRGBA8 invalid byte count: got {}, expected {}",
+            len(_pixels),
+            expected_bytes,
+        )
+        return false
+    }
+
+    transfer := sdl.CreateGPUTransferBuffer(_renderer.gpu, sdl.GPUTransferBufferCreateInfo{
+        usage = .UPLOAD,
+        size = u32(len(_pixels)),
+        props = 0,
+    })
+    if transfer == nil {
+        log.errorf("CreateGPUTransferBuffer failed: {}", sdl.GetError())
+        return false
+    }
+    defer sdl.ReleaseGPUTransferBuffer(_renderer.gpu, transfer)
+
+    mapped_raw := sdl.MapGPUTransferBuffer(_renderer.gpu, transfer, false)
+    if mapped_raw == nil {
+        log.errorf("MapGPUTransferBuffer failed: {}", sdl.GetError())
+        return false
+    }
+
+    mapped := ([^]u8)(mapped_raw)
+    copy(mapped[:len(_pixels)], _pixels)
+    sdl.UnmapGPUTransferBuffer(_renderer.gpu, transfer)
+
+    cmd_buf := sdl.AcquireGPUCommandBuffer(_renderer.gpu)
+    if cmd_buf == nil {
+        log.errorf("AcquireGPUCommandBuffer failed: {}", sdl.GetError())
+        return false
+    }
+
+    // Copies the UI Pass
+    copy_pass := sdl.BeginGPUCopyPass(cmd_buf)
+
+    src := sdl.GPUTextureTransferInfo{
+        transfer_buffer = transfer,
+        offset = 0,
+        pixels_per_row = _width,
+        rows_per_layer = _height,
+    }
+
+    dst := sdl.GPUTextureRegion{
+        texture = tex,
+        mip_level = 0,
+        layer = 0,
+        x = 0,
+        y = 0,
+        z = 0,
+        w = _width,
+        h = _height,
+        d = 1,
+    }
+
+    sdl.UploadToGPUTexture(copy_pass, src, dst, false)
+    sdl.EndGPUCopyPass(copy_pass)
+
+    if !sdl.SubmitGPUCommandBuffer(cmd_buf) {
+        log.errorf("SubmitGPUCommandBuffer failed: {}", sdl.GetError())
+        return false
+    }
+
+    return true
+}
+
 // =============== Fallbacks that I might remove at some stage as they might not be needed ===============
 // Creates a placeholder texture, #TODO: might use this as a fallback if texture fails to load
 CreateCheckerTexture2x2 :: proc(_renderer : ^Renderer) -> (renderdata.Texture_Handle, bool) {

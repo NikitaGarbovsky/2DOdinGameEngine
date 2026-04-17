@@ -5,8 +5,14 @@ import "../renderdata"
 import gui "../gameplayGUI"
 import clay "Dependencies:clay/clay-odin"
 
+///
+/// This file contains the immediate mode decleration for gameplaygui widgets.
+/// Each procedure represents a sigle widget which is displayed based on gameplay 
+/// conditions.
+///
 
 // #TODO: restructure this when finishing building more gameplay hud
+// Builds all the immediate mode gameplay gui per frame
 BuildGameplayGUI :: proc(_ui : ^gui.Clay_UI,
     _interaction : ^Interaction_State,
     _input : ^input.InputState,
@@ -22,7 +28,7 @@ BuildGameplayGUI :: proc(_ui : ^gui.Clay_UI,
     _screen_size)
 }
 
-// Builds the HoverTooltip layout and creates a render command for it.
+// Builds the HoverTooltip layout and creates a render command for it per frame.
 BuildHoverTooltip :: proc(
     _ui : ^gui.Clay_UI,
     _interaction : ^Interaction_State,
@@ -52,6 +58,7 @@ BuildHoverTooltip :: proc(
 
     clay.BeginLayout()
 
+    // The main full screen space hud #TODO: move this out of this hudtool tip
     if clay.UI()(clay.ElementDeclaration{
         id = clay.ID("GameplayHudRoot"),
         layout = clay.LayoutConfig{
@@ -71,18 +78,19 @@ BuildHoverTooltip :: proc(
             tooltip_x := screen_pos.x - 40
             tooltip_y := screen_pos.y - 48
 
+            // Interactable OnHover tooltip element
             if clay.UI()(clay.ElementDeclaration{
                 id = clay.ID("InteractableHoverTooltip"),
                 layout = clay.LayoutConfig{
                     layoutDirection = .TopToBottom,
-                    padding = clay.PaddingAll(8),
-                    childGap = 2,
+                    padding = clay.PaddingAll(5),
+                    childGap = 10,
                     sizing = clay.Sizing{
                         width = clay.SizingFit({0, 0}),
                         height = clay.SizingFit({0, 0}),
                     },
                 },
-                backgroundColor = clay.Color{18, 18, 22, 230},
+                backgroundColor = clay.Color{18, 18, 22, 150},
                 cornerRadius = clay.CornerRadiusAll(6),
                 floating = clay.FloatingElementConfig{
                     offset = clay.Vector2{tooltip_x, tooltip_y},
@@ -92,24 +100,26 @@ BuildHoverTooltip :: proc(
                         parent = .LeftTop,
                     },
                     pointerCaptureMode = .Passthrough,
-                    attachTo = .Root,
+                    attachTo = .Parent,
                     clipTo = .None,
                 },
             }) {
-                clay.TextDynamic(
+                clay.TextDynamic( // Interactable Item Name
                     _interaction.hovered_text,
                     clay.TextConfig(clay.TextElementConfig{
-                        fontSize = 16,
+                        fontSize = 14,
                         textColor = clay.Color{255, 255, 255, 255},
+                        textAlignment = .Center
                     }),
                 )
 
-                if _interaction.can_interact {
-                    clay.Text( //#TODO: TEXT NOT CURRENTLY IMPLEMENTED
+                if _interaction.can_interact { // Interaction popup
+                    clay.Text( 
                         "Interact",
                         clay.TextConfig(clay.TextElementConfig{
                             fontSize = 14,
-                            textColor = clay.Color{210, 210, 210, 255},
+                            textColor = clay.Color{0, 139, 41, 255},
+                            textAlignment = .Center // #TODO: this doesn't work
                         }),
                     )
                 }

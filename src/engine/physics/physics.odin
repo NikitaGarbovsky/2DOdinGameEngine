@@ -5,7 +5,7 @@ import "../ecs"
 import "../components"
 import "../tilemap"
 import math "core:math/linalg"
-
+import "core:fmt"
 
 ///
 /// Physics module managing the logic of 2D physics for the engine using Box2D.
@@ -30,6 +30,8 @@ Init :: proc (_pw : ^PhysicsWorld) {
     _pw.substeps = 4
 
     _pw.initialized = true
+
+    fmt.printfln("--- Physics Intialized Successfully.")
 }
 
 // Cleans up physics world

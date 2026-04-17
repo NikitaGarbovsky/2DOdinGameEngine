@@ -5,6 +5,7 @@ import "../renderer"
 import "../assets"
 import "../renderdata"
 import "core:strings"
+import "core:fmt"
 
 ///
 /// Initializes the tilemap editor, primarily the palette.
@@ -68,6 +69,8 @@ InitCaveTileResources :: proc(
 
     RegisterHardcodedCaveTileDefs(_level, image.width, image.height, tex)
     LoadTileOriginOverrides(_level)
+
+    fmt.printfln("--- Cave Tileset Initialized Successfully.")
 }
 
 // Loops through all the sprites in the spritesheet to register them as usable tiles for the tilemap editor.

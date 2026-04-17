@@ -4,6 +4,7 @@ import "../assets"
 import "../renderer"
 import "../renderdata"
 import glm "core:math/linalg"
+import "core:fmt"
 
 // #TODO: comment all this.
 
@@ -82,6 +83,8 @@ LoadEntityAnimations :: proc(_renderer : ^renderer.Renderer) {
     }
 
     LoadSpriteSheets(_renderer, &goldingot_anim_bank, sprite_idle_sheetsGoldBar[:], "GoldIngotIdle", {350, 350}, 1, {0.5, 0.5})
+
+    fmt.printfln("--- Animation Sprites Initialized Successfully.")
 }
 
 // Loads given sprite sheet into the Animation_Bank for use in the application.

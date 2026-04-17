@@ -1,6 +1,7 @@
 package ecs
 
 import components "../components"
+import "core:fmt"
 
 // #TODO: do commenting for this file
 
@@ -19,6 +20,8 @@ Init :: proc(_world : ^EntityWorld) {
     _world.animators.index_of = make(map[Entity]int)
     _world.interactables.index_of = make(map[Entity]int)
     _world.inventory.index_of = make(map[Entity]int)
+
+    fmt.printfln("--- ECS Initialized Successfully.")
 }
 
 CreateEntity :: proc (_world : ^EntityWorld) -> Entity {

@@ -2,7 +2,7 @@ package platform
 
 import sdl "vendor:sdl3"
 import "base:runtime"
-import "core:log"
+import "core:fmt"
 
 // #TODO: comment this 
 
@@ -37,6 +37,8 @@ Init :: proc(_p : ^Platform) {
 	// 	context = default_context
 	// 	log.debugf("SDL {} [{}]: {}", category, priority, message)
 	// }, nil)
+
+    fmt.printfln("--- Platform & Window Initialized Successfully.")
 }
 
 Shutdown :: proc(_p : ^Platform) {

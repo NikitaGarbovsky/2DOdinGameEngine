@@ -5,6 +5,7 @@ import "../../platform"
 import "core:log"
 import math "core:math/linalg"
 import glm "core:math/linalg/glsl"
+import "core:fmt"
 
 // #TODO: comment this 
 
@@ -27,6 +28,7 @@ Init :: proc(_renderer : ^Renderer, _platform : ^platform.Platform, _vert_code, 
     if !InitSpriteBatcher(_renderer, 65536) do return false
     if !InitSpritePipeline(_renderer, _vert_code, _frag_code) do return false
 
+    fmt.printfln("--- Renderer Intialized Successfully.")
     return true
 }
 
