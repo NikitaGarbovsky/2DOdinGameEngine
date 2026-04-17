@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "tile_layers": [
+    {
+      "name": "ground",
+      "tiles": [
+        {
+          "x": 33,
+          "y": 0,
+          "tile": "ground_14"
+        },
+        {
+          "x": 27,
+          "y": 2,
+          "tile": "ground_14"
+        },
+        {
+          "x": 33,
+          "y": 3,
+          "tile": "ground_14"
+        },
+        {
+          "x": 40,
+          "y": 3,
+          "tile": "ground_14"
+        },
+        {
+          "x": 34,
+          "y": 5,
+          "tile": "ground_14"
+        },
+        {
+          "x": 32,
+          "y": 6,
+          "tile": "ground_14"
+        },
+        {
+          "x": 41,
+          "y": 8,
+          "tile": "ground_14"
+        },
+        {
+          "x": 28,
+          "y": 9,
+          "tile": "ground_14"
+        },
+        {
+          "x": 40,
+          "y": 9,
+          "tile": "ground_14"
+        },
+        {
+          "x": 37,
+          "y": 10,
+          "tile": "ground_14"
+        },
+        {
+          "x": 35,
+          "y": 11,
+          "tile": "ground_14"
+        },
+        {
+          "x": 46,
+          "y": 11,
+          "tile": "ground_14"
+        },
+        {
+          "x": 33,
+          "y": 12,
+          "tile": "ground_14"
+        },
+        {
+          "x": 40,
+          "y": 13,
+          "tile": "ground_14"
+        },
+        {
+          "x": 35,
+          "y": 16,
+          "tile": "ground_14"
+        },
+        {
+          "x": 38,
+          "y": 18,
+          "tile": "ground_14"
+        }
+      ]
+    },
+    {
+      "name": "walls",
+      "tiles": [
+
+      ]
+    },
+    {
+      "name": "decorations",
+      "tiles": [
+
+      ]
+    }
+  ]
+}

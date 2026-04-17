@@ -131,6 +131,8 @@ Run :: proc(_app : ^AppState) {
 			if _app.mode == .Playmode {
 				clay_commands := systems.BuildGameplayGUI(
 					&_app.play_state.gameplay_ui,
+					&_app.world,
+					_app.play_state.player_entity,
 					&_app.play_state.interaction_state,
 					&_app.input,
 					&_app.renderer.camera,
@@ -140,19 +142,64 @@ Run :: proc(_app : ^AppState) {
 				// Sends the gui layout data to the renderer to render
 				systems.RenderGameplayGUI(&_app.renderer, &_app.play_state.gameplay_ui ,&clay_commands)
 			}
-			if _app.mode == .Editor {
+			if _app.mode == .Editor { // #TODO: This is pretty horrendous, probably move this into a system.
 				actions := editorimgui.ConsumeEditorActions()
+
 				spawn_pos := [2]f32{
 					_app.renderer.camera.position.x,
 					_app.renderer.camera.position.y,
 				}
 
 				if actions.spawn_minecart {
-					prefabs.CreateMineCartEntity(&_app.world, &_app.physics_world, spawn_pos)
+					_ = prefabs.CreateMineCartEntity(&_app.world, &_app.physics_world, spawn_pos)
 				}
 
 				if actions.spawn_gold_ingot {
-					prefabs.CreateGoldIngotEntity(&_app.world, &_app.physics_world, spawn_pos)
+					_ = prefabs.CreateGoldIngotEntity(&_app.world, &_app.physics_world, spawn_pos)
+				}
+
+				// Manages when the user deletes an entity in the editor dear_imgui panel.
+				if actions.delete_entity {
+					physics.DestroyBodyForEntity(&_app.physics_world, actions.delete_entity_target)
+					ecs.DeleteEntity(&_app.world, actions.delete_entity_target)
+
+					if editorimgui.entity_inspector_state.has_selected_entity &&
+					editorimgui.entity_inspector_state.selected_entity.id == actions.delete_entity_target.id {
+						editorimgui.entity_inspector_state.has_selected_entity = false
+					}
+				}
+
+				// Manages when the user removes components from entities.
+				if actions.remove_component {
+					entity := actions.remove_component_target
+
+					#partial switch actions.remove_component_kind {
+					case .Name:
+						ecs.RemoveComponentFromEntityWorld(&_app.world, &_app.world.names, entity, .Name)
+
+					case .Sprite:
+						ecs.RemoveComponentFromEntityWorld(&_app.world, &_app.world.sprites, entity, .Sprite)
+
+					case .Collider:
+						physics.DestroyBodyForEntity(&_app.physics_world, entity)
+						ecs.RemoveComponentFromEntityWorld(&_app.world, &_app.world.colliders, entity, .Collider)
+
+					case .Rigid_Body:
+						physics.DestroyBodyForEntity(&_app.physics_world, entity)
+						ecs.RemoveComponentFromEntityWorld(&_app.world, &_app.world.rigid_bodies, entity, .Rigid_Body)
+
+					case .Interactable:
+						ecs.RemoveComponentFromEntityWorld(&_app.world, &_app.world.interactables, entity, .Interactable)
+
+					case .Script:
+						ecs.RemoveComponentFromEntityWorld(&_app.world, &_app.world.scripts, entity, .Script)
+
+					case .Animator:
+						ecs.RemoveComponentFromEntityWorld(&_app.world, &_app.world.animators, entity, .Animator)
+
+					case .Inventory:
+						ecs.RemoveComponentFromEntityWorld(&_app.world, &_app.world.inventory, entity, .Inventory)
+					}
 				}
 				systems.EditorUIPass(editorContext)
 			}

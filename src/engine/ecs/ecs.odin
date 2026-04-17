@@ -3,7 +3,10 @@ package ecs
 import components "../components"
 import "core:fmt"
 
-// #TODO: do commenting for this file
+///
+/// This manages the ECS system, filled with helpers to add,delete etc entities & components.
+/// Each procedure is pretty self-explanitory. 
+/// 
 
 // Initializes all component maps, allocates memory for them.
 Init :: proc(_world : ^EntityWorld) {
@@ -24,6 +27,7 @@ Init :: proc(_world : ^EntityWorld) {
     fmt.printfln("--- ECS Initialized Successfully.")
 }
 
+// Creates a entity and adds it to entity world
 CreateEntity :: proc (_world : ^EntityWorld) -> Entity {
     newEntity : Entity
     newEntity.id = _world.next_entity
@@ -35,6 +39,7 @@ CreateEntity :: proc (_world : ^EntityWorld) -> Entity {
     return newEntity
 }
 
+// Deletes the entity, first removing all the components so it cleans up well.
 DeleteEntity :: proc(_world : ^EntityWorld, _entityToDelete : Entity) {
     if !_world.alive[_entityToDelete] do return;
 
@@ -53,6 +58,7 @@ DeleteEntity :: proc(_world : ^EntityWorld, _entityToDelete : Entity) {
     delete_key(&_world.componentSignatures, _entityToDelete)
 }
 
+// Adds a component to the passed entity. Private because this is just a helper 
 @private 
 AddComponent :: proc(_compStore : ^Component_Store($T), _entity : Entity, _value: T) {
     if idx, exists := _compStore.index_of[_entity]; exists {
@@ -66,11 +72,13 @@ AddComponent :: proc(_compStore : ^Component_Store($T), _entity : Entity, _value
     _compStore.index_of[_entity] = idx
 }
 
+// Adds a component to the entity world and update the component signature.
 AddComponentToEntityWorld :: proc(_world : ^EntityWorld, _compStore : ^Component_Store($T), _entity : Entity, _value : T, _flag : components.Component_Flag) {
     AddComponent(_compStore, _entity, _value)
     _world.componentSignatures[_entity] |= components.ComponentMask(_flag)
 }
 
+// Helper for removing a component from an entity, called by below.
 @private
 RemoveComponent :: proc(_compStore : ^Component_Store($T), _entity : Entity) {
     idx, exists := _compStore.index_of[_entity]
@@ -91,16 +99,19 @@ RemoveComponent :: proc(_compStore : ^Component_Store($T), _entity : Entity) {
     delete_key(&_compStore.index_of, _entity)
 }
 
+// Remove this component from this entity and update the component signature.
 RemoveComponentFromEntityWorld :: proc(_world : ^EntityWorld, _compStore : ^Component_Store($T), _entity : Entity, _flag : components.Component_Flag) {
     RemoveComponent(_compStore, _entity)
     _world.componentSignatures[_entity] &= ~components.ComponentMask(_flag)
 }
 
+// Check if this component is attached to this entity.
 HasComponent :: proc(_compStore : ^Component_Store($T), _entity : Entity)  -> bool {
     _, exists := _compStore.index_of[_entity]
     return exists
 }
 
+// 
 GetComponent :: proc(_compStore : ^Component_Store($T), _entity : Entity) -> (^T, bool) {
     idx, exists := _compStore.index_of[_entity]
     if !exists do return nil, false

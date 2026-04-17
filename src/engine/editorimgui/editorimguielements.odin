@@ -480,9 +480,21 @@ DrawEntitiesWindow :: proc(_world : ^ecs.EntityWorld) {
     imgui.end()
 }
 
+// Flags a component on an entity for removal, this is then caught in the next update loop
+QueueRemoveComponent :: proc(_entity : ecs.Entity, _kind : components.Component_Flag) {
+    editor_actions.remove_component = true
+    editor_actions.remove_component_target = _entity
+    editor_actions.remove_component_kind = _kind
+}
+
 // Draws all the component fields that are attached to the entity.
 @private
 DrawSelectedEntityInspector :: proc(_world : ^ecs.EntityWorld, _entity : ecs.Entity) {
+    if imgui.button("Delete Entity") {
+        editor_actions.delete_entity = true
+        editor_actions.delete_entity_target = _entity
+    }
+
     label := GetEntityDisplayName(_world, _entity)
     label_c := strings.clone_to_cstring(label, context.temp_allocator)
     imgui.text(label_c)
@@ -490,6 +502,9 @@ DrawSelectedEntityInspector :: proc(_world : ^ecs.EntityWorld, _entity : ecs.Ent
 
     if name, ok := ecs.GetComponent(&_world.names, _entity); ok {
         if imgui.collapsing_header("Name") {
+            if imgui.button("Remove Name") {
+                QueueRemoveComponent(_entity, .Name)
+            }
             name_c := strings.clone_to_cstring(name.entityName, context.temp_allocator)
             imgui.text(name_c)
         }
@@ -511,6 +526,9 @@ DrawSelectedEntityInspector :: proc(_world : ^ecs.EntityWorld, _entity : ecs.Ent
 
     if sprite, ok := ecs.GetComponent(&_world.sprites, _entity); ok {
         if imgui.collapsing_header("Sprite") {
+            if imgui.button("Remove Sprite") {
+                QueueRemoveComponent(_entity, .Sprite)
+            }
             size := [2]f32{sprite.size.x, sprite.size.y}
             if imgui.drag_float2("Size", &size, 0.1) {
                 sprite.size = {size[0], size[1]}
@@ -530,6 +548,9 @@ DrawSelectedEntityInspector :: proc(_world : ^ecs.EntityWorld, _entity : ecs.Ent
 
     if collider, ok := ecs.GetComponent(&_world.colliders, _entity); ok {
         if imgui.collapsing_header("Collider") {
+            if imgui.button("Remove Collider") {
+                QueueRemoveComponent(_entity, .Collider)
+            }
             imgui.text_unformatted("Shape")
             if imgui.small_button("Box") {
                 collider.shape = .Box
@@ -558,6 +579,9 @@ DrawSelectedEntityInspector :: proc(_world : ^ecs.EntityWorld, _entity : ecs.Ent
 
     if rb, ok := ecs.GetComponent(&_world.rigid_bodies, _entity); ok {
         if imgui.collapsing_header("Rigid Body") {
+            if imgui.button("Remove Rigid Body") {
+                QueueRemoveComponent(_entity, .Rigid_Body)
+            }
             imgui.text_unformatted("Body Type")
             if imgui.small_button("Static") {
                 rb.body_type = .Static
@@ -587,6 +611,9 @@ DrawSelectedEntityInspector :: proc(_world : ^ecs.EntityWorld, _entity : ecs.Ent
 
     if interactable, ok := ecs.GetComponent(&_world.interactables, _entity); ok {
         if imgui.collapsing_header("Interactable") {
+            if imgui.button("Remove Interactable") {
+                QueueRemoveComponent(_entity, .Interactable)
+            }
             prompt_c := strings.clone_to_cstring(interactable.prompt_text, context.temp_allocator)
             imgui.text(prompt_c)
 
@@ -606,6 +633,9 @@ DrawSelectedEntityInspector :: proc(_world : ^ecs.EntityWorld, _entity : ecs.Ent
 
     if script, ok := ecs.GetComponent(&_world.scripts, _entity); ok {
         if imgui.collapsing_header("Script") {
+            if imgui.button("Remove Script") {
+                QueueRemoveComponent(_entity, .Script)
+            }
             path_c := strings.clone_to_cstring(script.path, context.temp_allocator)
             imgui.text(path_c)
 
@@ -616,6 +646,9 @@ DrawSelectedEntityInspector :: proc(_world : ^ecs.EntityWorld, _entity : ecs.Ent
 
     if inventory, ok := ecs.GetComponent(&_world.inventory, _entity); ok {
         if imgui.collapsing_header("Inventory") {
+            if imgui.button("Remove Inventory") {
+                QueueRemoveComponent(_entity, .Inventory)
+            }
             gold := inventory.gold
             if imgui.input_int("Gold", &gold) {
                 inventory.gold = gold
@@ -630,6 +663,9 @@ DrawSelectedEntityInspector :: proc(_world : ^ecs.EntityWorld, _entity : ecs.Ent
 
     if animator, ok := ecs.GetComponent(&_world.animators, _entity); ok {
         if imgui.collapsing_header("Animator") {
+            if imgui.button("Remove Animator") {
+                QueueRemoveComponent(_entity, .Animator)
+            }
             req_c := strings.clone_to_cstring(animator.requested_state, context.temp_allocator)
             cur_c := strings.clone_to_cstring(animator.current_state, context.temp_allocator)
 

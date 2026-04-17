@@ -2,6 +2,7 @@ package editorimgui
 
 import imgui "Dependencies:odin-imgui"
 import "../ecs"
+import "../components"
 
 ///
 /// Definitions for editorimgui objects utilized by the editorimgui
@@ -51,6 +52,13 @@ asset_tree_root : Asset_Node
 Editor_Actions :: struct {
     spawn_minecart : bool,
     spawn_gold_ingot : bool,
+
+    delete_entity : bool,
+    delete_entity_target : ecs.Entity,
+
+    remove_component : bool,
+    remove_component_target : ecs.Entity,
+    remove_component_kind : components.Component_Flag,
 }
 
 editor_actions : Editor_Actions
