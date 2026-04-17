@@ -44,7 +44,6 @@ RenderEditorMode :: proc(_context : Editor_Mode_Context) {
     editorimgui.EditorImgui_BeginFrame()
 
         // Build UI widgets
-        editorimgui.DrawAssetBrowser() 
         editorimgui.UpdateEditorDebugInfo(
             _context.frame_stats.fps, 
             _context.frame_stats.ms_per_frame, 
