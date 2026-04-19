@@ -1,3 +1,4 @@
+#+vet explicit-allocators
 package systems
 
 import glm "core:math/linalg/glsl"

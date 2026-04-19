@@ -1,3 +1,4 @@
+#+vet explicit-allocators
 package assets
 
 import "core:log"

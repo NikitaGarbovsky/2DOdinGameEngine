@@ -1,3 +1,4 @@
+#+vet explicit-allocators
 package gameplaygui
 
 import "vendor:sdl3/ttf"

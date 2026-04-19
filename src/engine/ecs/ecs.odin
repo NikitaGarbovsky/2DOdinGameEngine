@@ -1,3 +1,4 @@
+#+vet explicit-allocators
 package ecs
 
 import components "../components"

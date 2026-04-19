@@ -1,3 +1,4 @@
+#+vet explicit-allocators
 package app 
 
 import "../engine/ecs"

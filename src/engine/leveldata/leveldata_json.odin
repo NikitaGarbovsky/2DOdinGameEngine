@@ -1,3 +1,4 @@
+#+vet explicit-allocators
 package leveldata
 
 import "core:encoding/json"

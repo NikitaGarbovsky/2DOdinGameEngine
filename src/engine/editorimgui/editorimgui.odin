@@ -1,3 +1,5 @@
+#+vet explicit-allocators
+
 package editorimgui
 
 import sdl "vendor:sdl3"

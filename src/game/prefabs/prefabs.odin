@@ -1,3 +1,4 @@
+#+vet explicit-allocators
 package prefabs
 
 import "../../engine/ecs"

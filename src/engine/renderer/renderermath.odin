@@ -1,3 +1,4 @@
+#+vet explicit-allocators
 package renderer
 
 import glm "core:math/linalg/glsl"

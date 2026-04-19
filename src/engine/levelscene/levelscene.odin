@@ -1,3 +1,4 @@
+#+vet explicit-allocators
 package levelscene
 
 import "core:log"

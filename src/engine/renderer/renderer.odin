@@ -1,3 +1,4 @@
+#+vet explicit-allocators
 package renderer
 
 import sdl "vendor:sdl3"

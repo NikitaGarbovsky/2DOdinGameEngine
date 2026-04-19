@@ -1,3 +1,4 @@
+#+vet explicit-allocators
 package scripting 
 
 import lua "vendor:lua/5.4"

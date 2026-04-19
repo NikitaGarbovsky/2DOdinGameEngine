@@ -1,3 +1,4 @@
+#+vet explicit-allocators
 package physics
 
 import b2 "vendor:box2d"
