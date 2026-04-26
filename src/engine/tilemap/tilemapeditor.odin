@@ -129,10 +129,10 @@ DrawLevelText :: proc(_level : ^Level_State) {
             imgui.text("Level:") 
             imgui.same_line()
             path := string(_level.editor.current_level_path.buf[:])
-            parts := strings.split(path, "\\")
+            parts := strings.split(path, "\\", context.temp_allocator)
             levelname := parts[len(parts) -1]
-            converted_cstr := strings.clone_to_cstring(levelname) // #TODO: VERY BAD, ALLOCATING MEMORY EVERY FRAME
-            defer delete(converted_cstr)
+            converted_cstr := strings.clone_to_cstring(levelname, context.temp_allocator) // #TODO: VERY BAD, ALLOCATING MEMORY EVERY FRAME
+            defer delete(converted_cstr, context.temp_allocator)
             imgui.text(converted_cstr)
         }
 

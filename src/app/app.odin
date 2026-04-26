@@ -208,6 +208,7 @@ Run :: proc(_app : ^AppState) {
 			// Push all accumulated frame data to GPU
 			renderer.EndFrame(&_app.renderer)
 		}
+		free_all(context.temp_allocator)
 	}
 }
 

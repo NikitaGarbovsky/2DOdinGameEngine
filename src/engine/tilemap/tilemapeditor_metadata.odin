@@ -28,7 +28,7 @@ SaveTileOriginOverrides :: proc(_level : ^Level_State) {
     if len(_level.resources.tileset_meta_path) == 0 do return
 
     file := Tile_Origin_Override_File{
-        tiles = make([dynamic]Tile_Origin_Override, 0, len(_level.defsLibrary.defs)),
+        tiles = make([dynamic]Tile_Origin_Override, 0, len(_level.defsLibrary.defs), context.allocator),
     }
     defer delete(file.tiles)
 
@@ -48,12 +48,13 @@ SaveTileOriginOverrides :: proc(_level : ^Level_State) {
             use_spaces = true,
             spaces     = 2,
         },
+        context.allocator
     )
     if err != nil {
         errstring := err.(json.Marshal_Data_Error)
         log.debugf("Error when jason marshalling: {}", errstring) // #TODO: add in engine console output here.
     }
-    defer delete(data)
+    defer delete(data, context.allocator)
 
     write_err := os.write_entire_file(_level.resources.tileset_meta_path, data)
     if write_err != nil {

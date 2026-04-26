@@ -34,7 +34,7 @@ PathBuffer_String :: proc(_buf : ^Path_Buffer) -> string {
 // Takes in the level state and records all the level data into the saveable .json format.
 BuildTileLayerData :: proc(_level : ^Level_State, _layer : Tilemap_Layer) -> leveldata.Tile_Layer_Data {
     tmap := GetTilemapForLayer(_level, _layer)
-    placements := make([dynamic]leveldata.Tile_Placement_Data, 0, len(tmap.tiles))
+    placements := make([dynamic]leveldata.Tile_Placement_Data, 0, len(tmap.tiles),  context.allocator)
 
     for cell, inst in tmap.tiles {
         def, ok := GetTileDef(&_level.defsLibrary, inst.def_id)

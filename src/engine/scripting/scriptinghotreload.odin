@@ -40,7 +40,7 @@ ShouldReloadScript :: proc(_instance : ^Script_Instance) -> bool {
 // Loads the lua scripts table data structure for use for gameplay scripting.
 @private 
 LoadScriptTable :: proc(_runtime : ^Script_Runtime, _path : string) -> (i32, bool) {
-    status := lua.L_dofile(_runtime.L, strings.clone_to_cstring(_path))
+    status := lua.L_dofile(_runtime.L, strings.clone_to_cstring(_path, context.allocator))
 
     // Error detected
     if status != 0 { 

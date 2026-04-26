@@ -134,9 +134,9 @@ DrawDebugInfoWindow :: proc() {
         // #TODO: BAD BAD BAD, make this system better
         framerateStr := fmt.tprint(math.round(frameDebugInfo.framerate * 1))
         strFramerate : []string = {"FPS: ", framerateStr}
-        resultframerrateStr := strings.concatenate(strFramerate)
-        cstrFramerate := strings.clone_to_cstring(resultframerrateStr)
-        defer delete(cstrFramerate)
+        resultframerrateStr := strings.concatenate(strFramerate, context.temp_allocator)
+        cstrFramerate := strings.clone_to_cstring(resultframerrateStr, context.temp_allocator)
+        defer delete(cstrFramerate, context.temp_allocator)
         imgui.text(cstrFramerate)
 
         if imgui.collapsing_header("Renderer") {
@@ -146,44 +146,44 @@ DrawDebugInfoWindow :: proc() {
 
             msStr := fmt.tprint(math.round(frameDebugInfo.ms * 1))
             strMS : []string = {"MS: ", msStr}
-            resultstrMS := strings.concatenate(strMS)
-            cstrMS := strings.clone_to_cstring(resultstrMS)
-            defer delete(cstrMS)
+            resultstrMS := strings.concatenate(strMS, context.temp_allocator)
+            cstrMS := strings.clone_to_cstring(resultstrMS, context.temp_allocator)
+            defer delete(cstrMS, context.temp_allocator)
             imgui.text(cstrMS)
             
             batchCountStr := fmt.tprint(frameDebugInfo.batchCount)
             strs : []string = {"Batch Count: ", batchCountStr}
-            result := strings.concatenate(strs)
-            cstr := strings.clone_to_cstring(result)
-            defer delete(cstr)
+            result := strings.concatenate(strs, context.temp_allocator)
+            cstr := strings.clone_to_cstring(result, context.temp_allocator)
+            defer delete(cstr, context.temp_allocator)
             imgui.text(cstr)
 
             renderedItems := fmt.tprint(frameDebugInfo.renderedWorldElementsThisFrame)
             strs1 : []string = {"World Rendered Item's: ", renderedItems}
-            resultstr1 := strings.concatenate(strs1)
-            cstr1 := strings.clone_to_cstring(resultstr1)
-            defer delete(cstr1)
+            resultstr1 := strings.concatenate(strs1, context.temp_allocator)
+            cstr1 := strings.clone_to_cstring(resultstr1, context.temp_allocator)
+            defer delete(cstr1, context.temp_allocator)
             imgui.text(cstr1)
 
             renderedItems1 := fmt.tprint(frameDebugInfo.totalRenderedElementsThisFrame)
             strs2 : []string = {"Total Rendered Item's: ", renderedItems1}
-            resultstr2 := strings.concatenate(strs2)
-            cstr2 := strings.clone_to_cstring(resultstr2)
-            defer delete(cstr2)
+            resultstr2 := strings.concatenate(strs2, context.temp_allocator)
+            cstr2 := strings.clone_to_cstring(resultstr2, context.temp_allocator)
+            defer delete(cstr2, context.temp_allocator)
             imgui.text(cstr2)
 
             culledItems0 := fmt.tprint(frameDebugInfo.culledEntitySpriteThisFrame)
             strCulled0 : []string = {"Culled Entities: ", culledItems0}
-            resultStrCulled0 := strings.concatenate(strCulled0)
-            cstrCulled := strings.clone_to_cstring(resultStrCulled0)
-            defer delete(cstrCulled)
+            resultStrCulled0 := strings.concatenate(strCulled0, context.temp_allocator)
+            cstrCulled := strings.clone_to_cstring(resultStrCulled0, context.temp_allocator)
+            defer delete(cstrCulled, context.temp_allocator)
             imgui.text(cstrCulled)
 
             culledItems1 := fmt.tprint(frameDebugInfo.culledTilemapSpriteThisFrame)
             strCulled1 : []string = {"Culled Tile's: ", culledItems1}
-            resultStrCulled1 := strings.concatenate(strCulled1)
-            cstrCulled0 := strings.clone_to_cstring(resultStrCulled1)
-            defer delete(cstrCulled0)
+            resultStrCulled1 := strings.concatenate(strCulled1, context.temp_allocator)
+            cstrCulled0 := strings.clone_to_cstring(resultStrCulled1, context.temp_allocator)
+            defer delete(cstrCulled0, context.temp_allocator)
             imgui.text(cstrCulled0)
         }
     }
@@ -270,11 +270,11 @@ GatherChildDirs :: proc(_root : string, _outKids : ^[dynamic]string) {
 
     infos, read_err := os.read_dir(handle, -1, context.allocator)
     if read_err != os.ERROR_NONE do return
-    defer delete(infos)
+    defer delete(infos, context.allocator)
 
     for info in infos {
         full_path, err := filepath.join({_root, info.name}, context.temp_allocator)
-        append(_outKids, strings.clone(full_path))
+        append(_outKids, strings.clone(full_path, context.allocator))
     }
 
     sort.quick_sort(_outKids^[:])
@@ -316,9 +316,9 @@ DrawCachedNodeRecursive :: proc(node: ^Asset_Node) {
 ScanDirectory :: proc(_path: string) -> ^Asset_Node {
 
     // Creates a new node and fills its data
-    node := new(Asset_Node)
-    node.full_path = strings.clone(_path)
-    node.name = strings.clone(filepath.base(_path))
+    node := new(Asset_Node, context.allocator)
+    node.full_path = strings.clone(_path, context.allocator)
+    node.name = strings.clone(filepath.base(_path), context.allocator)
     node.is_directory = os.is_dir(_path)
 
     if node.is_directory {
@@ -332,7 +332,7 @@ ScanDirectory :: proc(_path: string) -> ^Asset_Node {
             for info in infos {
                 child_path, err := filepath.join({_path, info.name}, context.allocator)
                 append(&node.children, ScanDirectory(child_path))
-                delete(child_path) 
+                delete(child_path, context.allocator) 
             }
         }
     }

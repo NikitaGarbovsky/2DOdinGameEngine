@@ -28,8 +28,8 @@ Init :: proc(_renderer : ^Renderer, _platform : ^platform.Platform, _vert_code, 
     // Used by dear_imgui, set upon renderer initialization.
     _renderer.swapchain_color_format = sdl.GetGPUSwapchainTextureFormat(_renderer.gpu, _renderer.window)
 
-    _renderer.textures = make([dynamic]Texture_Resource, 0, 64)
-    _renderer.samplers = make([dynamic]Sampler_Resource, 0, 8)
+    _renderer.textures = make([dynamic]Texture_Resource, 0, 64, context.allocator)
+    _renderer.samplers = make([dynamic]Sampler_Resource, 0, 8, context.allocator)
 
     if !CreateDefaultTextureAndSampler(_renderer) do return false
     if !InitSpriteBatcher(_renderer, 65536) do return false

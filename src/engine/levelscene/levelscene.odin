@@ -24,8 +24,8 @@ SaveCurrentLevel :: proc(
 
     file := leveldata.Level_File{
         version     = 1,
-        tile_layers = make([dynamic]leveldata.Tile_Layer_Data, 0, tilemap.TILEMAP_LAYER_COUNT),
-        entities    = make([dynamic]leveldata.Entity_Instance_Data),
+        tile_layers = make([dynamic]leveldata.Tile_Layer_Data, 0, tilemap.TILEMAP_LAYER_COUNT, context.allocator),
+        entities    = make([dynamic]leveldata.Entity_Instance_Data, context.allocator),
     }
     defer leveldata.DestroyLevelFile(&file)
 
@@ -51,7 +51,7 @@ LoadLevelFromPath :: proc(
     _physics : ^physics.PhysicsWorld,
     _path : string,
 ) -> bool {
-    file, ok := leveldata.LoadLevelFile(_path)
+    file, ok := leveldata.LoadLevelFile(_path, context.allocator)
     if !ok {
         return false
     }
@@ -112,7 +112,7 @@ DestroyPlacedLevelEntities :: proc(
     _world : ^ecs.EntityWorld,
     _physics : ^physics.PhysicsWorld,
 ) {
-    to_delete := make([dynamic]ecs.Entity)
+    to_delete := make([dynamic]ecs.Entity, context.allocator)
     defer delete(to_delete)
 
     for entity, alive in _world.alive {

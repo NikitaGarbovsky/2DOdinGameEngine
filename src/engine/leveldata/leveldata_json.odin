@@ -21,12 +21,13 @@ SaveLevelFile :: proc(
             use_spaces = true,
             spaces = 2,
         },
+        context.allocator
     )
     if error != nil {
         log.errorf("SaveLevelFile: json marshal failed: {}", error)
         return false
     }
-    defer delete(data)
+    defer delete(data, context.allocator)
 
     write_err := os.write_entire_file(_path,data)
     if write_err != nil {

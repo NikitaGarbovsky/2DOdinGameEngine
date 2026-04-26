@@ -47,8 +47,8 @@ InitFontAtlas :: proc(
     _atlas.row_height = 0
     _atlas.dirty = false
 
-    _atlas.pixels = make([]u8, _atlas.width * _atlas.height * 4)
-    _atlas.glyphs = make(map[rune]Font_Glyph)
+    _atlas.pixels = make([]u8, _atlas.width * _atlas.height * 4, context.allocator)
+    _atlas.glyphs = make(map[rune]Font_Glyph, context.allocator)
 
     // Create the GPU resources used to render glyphs from the atlas.
     tex, ok := renderer.CreateTextureRGBA8(
@@ -251,7 +251,7 @@ ShutdownFontAtlas :: proc(_atlas : ^Font_Atlas) {
     }
 
     if len(_atlas.pixels) > 0 {
-        delete(_atlas.pixels)
+        delete(_atlas.pixels, context.allocator)
         _atlas.pixels = nil 
     }
 

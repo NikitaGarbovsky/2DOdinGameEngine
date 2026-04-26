@@ -262,9 +262,9 @@ InitSpriteBatcher :: proc(_renderer : ^Renderer, _max_instances : u32) -> bool {
     batcher := &_renderer.sprite_batcher
     batcher.max_instances = _max_instances
 
-    batcher.items = make([dynamic]renderdata.Render_Item, 0, int(_max_instances))
-    batcher.instances = make([dynamic]renderdata.Sprite_Instance, 0, int(_max_instances))
-    batcher.batches = make([dynamic]renderdata.Batch, 0, 256)
+    batcher.items = make([dynamic]renderdata.Render_Item, 0, int(_max_instances), context.allocator)
+    batcher.instances = make([dynamic]renderdata.Sprite_Instance, 0, int(_max_instances), context.allocator)
+    batcher.batches = make([dynamic]renderdata.Batch, 0, 256, context.allocator)
 
     quad_vertices := [4]Quad_Vertex{
         {local_pos = {0.0, 0.0}, uv = {0.0, 0.0}},

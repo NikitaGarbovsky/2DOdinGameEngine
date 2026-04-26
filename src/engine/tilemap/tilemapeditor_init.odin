@@ -24,7 +24,7 @@ InitEditorPallete_Cave :: proc(
     _level.editor.palette_window_size = {480, 600}
 
     if _level.editor.palette_items == nil {
-        _level.editor.palette_items = make([dynamic]Palette_Item, 0, 128)
+        _level.editor.palette_items = make([dynamic]Palette_Item, 0, 128, context.allocator)
     } else {
         clear(&_level.editor.palette_items)
     }

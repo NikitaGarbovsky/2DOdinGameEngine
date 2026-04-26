@@ -14,9 +14,9 @@ import "core:fmt"
 
 
 LoadEntityAnimations :: proc(_renderer : ^renderer.Renderer) {
-    player_anim_bank.directional_sets = make(map[string][8]Animation_Clip)
-    minecart_anim_bank.directional_sets = make(map[string][8]Animation_Clip)
-    goldingot_anim_bank.directional_sets = make(map[string][8]Animation_Clip)
+    player_anim_bank.directional_sets = make(map[string][8]Animation_Clip, context.allocator)
+    minecart_anim_bank.directional_sets = make(map[string][8]Animation_Clip, context.allocator)
+    goldingot_anim_bank.directional_sets = make(map[string][8]Animation_Clip, context.allocator)
 
     sprite_death_sheets := [8]string {
     "Resources/Sprites/PlayerCharacter/Death/villager_death_00000_Sheet.png",
@@ -115,7 +115,7 @@ LoadSpriteSheets :: proc(
         animclip.looping = false
         animclip.name = _animationLabel
         animclip.source_path = sprite_sheet_path
-        animclip.frames = make([]Animation_Frame, _frameCount)
+        animclip.frames = make([]Animation_Frame, _frameCount, context.allocator)
 
         for k := 0; k < _frameCount; k += 1 {
             anim_frame : Animation_Frame

@@ -9,13 +9,13 @@ import "core:fmt"
 
 
 InitTilemap :: proc(_tmap : ^Tilemap) {
-    _tmap.tiles = make(map[Tile_Coord]Tile_Instance) 
+    _tmap.tiles = make(map[Tile_Coord]Tile_Instance, context.allocator) 
 }
 
 // #TODO: Use these helpers when creating the tile palete UI.
 InitTileDefLibrary :: proc(_lib : ^Tile_Def_Library) {
-    _lib.defs = make([dynamic]Tile_Definition)
-    _lib.id_by_key = make(map[string]Tile_Def_ID)
+    _lib.defs = make([dynamic]Tile_Definition, context.allocator)
+    _lib.id_by_key = make(map[string]Tile_Def_ID, context.allocator)
 }
 
 DestroyTileDefLibrary :: proc (_lib : ^Tile_Def_Library) {
@@ -38,7 +38,7 @@ RegisterTileDef :: proc(_lib : ^Tile_Def_Library, _def : ^Tile_Definition) -> Ti
     // Don't allow tiles with the same key. #TODO: when implementing this in editor, don't allow the
     // user to do this, instead of crashing the program here.
     if _, exists := _lib.id_by_key[_def.key]; exists {
-        panic(fmt.aprintf("RegisterTileDef: duplicate key '%s'", _def.key))
+        //fmt.aprintf("RegisterTileDef: duplicate key '%s'", _def.key,  context.allocator)
     }
 
     new_id := Tile_Def_ID(len(_lib.defs))

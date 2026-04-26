@@ -23,7 +23,7 @@ Init :: proc (_pw : ^PhysicsWorld) {
     _pw.world_id = b2.CreateWorld(world_def)
 
     _pw.tilemap_wall_body = b2.nullBodyId
-    _pw.body_by_entity = make(map[ecs.Entity]b2.BodyId)
+    _pw.body_by_entity = make(map[ecs.Entity]b2.BodyId, context.allocator)
 
     // Set starting values, 60 physics steps per second
     _pw.frametime_accumulator = 0

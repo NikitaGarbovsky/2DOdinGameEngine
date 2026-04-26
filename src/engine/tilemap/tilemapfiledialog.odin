@@ -102,7 +102,7 @@ RequestSaveLevelDialog :: proc(_level : ^Level_State) {
     default_location : cstring = nil
 
     if _level.editor.current_level_path.len > 0 {
-        default_location = strings.clone_to_cstring(PathBuffer_String(&_level.editor.current_level_path))
+        default_location = strings.clone_to_cstring(PathBuffer_String(&_level.editor.current_level_path), context.allocator)
     }
 
     sdl.ShowSaveFileDialog(
@@ -197,9 +197,9 @@ AppendLevelFileSuffix :: proc(_path : string) -> string {
     if strings.has_suffix(_path, ".json") {
         base := _path[:len(_path)-len(".json")]
         s := []string {base, ".level.json"}
-        return strings.concatenate(s)
+        return strings.concatenate(s,  context.allocator)
     }
 
     s := []string {_path, ".level.json"}
-    return strings.concatenate(s)
+    return strings.concatenate(s,  context.allocator)
 }

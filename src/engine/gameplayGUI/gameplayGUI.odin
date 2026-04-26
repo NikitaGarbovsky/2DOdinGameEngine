@@ -214,7 +214,7 @@ ShutdownGameplayUI :: proc(_ui : ^Clay_UI) {
     ShutdownFontAtlas(&_ui.gameplay_font)
     // Clean up clay memory arena
     if len(_ui.arena_mem) > 0 {
-        delete(_ui.arena_mem)
+        delete(_ui.arena_mem, context.allocator)
         _ui.arena_mem = nil
     }
 

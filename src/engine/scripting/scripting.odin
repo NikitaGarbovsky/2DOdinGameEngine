@@ -19,7 +19,7 @@ import "core:log"
 InitializeScripting :: proc(_runtime : ^Script_Runtime) {
     _runtime.L = lua.L_newstate()
     lua.L_openlibs(_runtime.L)
-    _runtime.instances = make(map[ecs.Entity]Script_Instance)
+    _runtime.instances = make(map[ecs.Entity]Script_Instance, context.allocator)
 
     RegisterScriptBindings(_runtime)
 }

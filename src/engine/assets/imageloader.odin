@@ -66,7 +66,7 @@ LoadImageFile :: proc(_path : string, _flip_vertical := false) -> (Image_Data, b
     }
 
     byte_count := int(width) * int(height) * 4
-    pixels := make([dynamic]u8, byte_count)
+    pixels := make([dynamic]u8, byte_count, context.allocator)
     copy(pixels[:], pixels_raw[:byte_count])
 
     image := Image_Data{

@@ -12,18 +12,18 @@ import "core:fmt"
 // Initializes all component maps, allocates memory for them.
 Init :: proc(_world : ^EntityWorld) {
     _world.next_entity = 0
-    _world.alive = make(map[Entity]bool)
-    _world.componentSignatures = make(map[Entity]u16)
+    _world.alive = make(map[Entity]bool, context.allocator)
+    _world.componentSignatures = make(map[Entity]u16, context.allocator)
 
-    _world.transforms.index_of = make(map[Entity]int)
-    _world.sprites.index_of = make(map[Entity]int) 
-    _world.names.index_of = make(map[Entity]int)
-    _world.colliders.index_of = make(map[Entity]int)
-    _world.rigid_bodies.index_of = make(map[Entity]int) 
-    _world.scripts.index_of = make(map[Entity]int)
-    _world.animators.index_of = make(map[Entity]int)
-    _world.interactables.index_of = make(map[Entity]int)
-    _world.inventory.index_of = make(map[Entity]int)
+    _world.transforms.index_of = make(map[Entity]int, context.allocator)
+    _world.sprites.index_of = make(map[Entity]int, context.allocator) 
+    _world.names.index_of = make(map[Entity]int, context.allocator)
+    _world.colliders.index_of = make(map[Entity]int, context.allocator)
+    _world.rigid_bodies.index_of = make(map[Entity]int, context.allocator) 
+    _world.scripts.index_of = make(map[Entity]int, context.allocator)
+    _world.animators.index_of = make(map[Entity]int, context.allocator)
+    _world.interactables.index_of = make(map[Entity]int, context.allocator)
+    _world.inventory.index_of = make(map[Entity]int, context.allocator)
 
     fmt.printfln("--- ECS Initialized Successfully.")
 }
